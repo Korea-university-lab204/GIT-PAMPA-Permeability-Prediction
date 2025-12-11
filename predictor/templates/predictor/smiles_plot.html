@@ -3,7 +3,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Korea university GIT- PAMPA Permeability Prediction</title>
+    <title>Permeability 3D Tool</title>
 
     <style>
         body {
@@ -51,7 +51,7 @@
 </head>
 <body>
 
-<h1>Korea university GIT- PAMPA Permeability Prediction</h1>
+<h1>Permeability 3D Visualization</h1>
 
 <!-- A. 그래프 생성용 폼 -->
 <form method="post">
@@ -88,7 +88,7 @@
         {% endif %}
     </div>
 
-    <!-- 오른쪽: 위 = 변수 민감도, 중간 = 단일 예측, 아래 = RDKit -->
+    <!-- 오른쪽: 위 = 변수 민감도, 가운데 = 단일 예측, 아래 = RDKit + R2 -->
     <div class="right-panel">
 
         {% if sensitivity %}
@@ -147,8 +147,16 @@
                 <li>H-bond Donors (HBD): <b>{{ rdkit_desc.HBD }}</b></li>
                 <li>H-bond Acceptors (HBA): <b>{{ rdkit_desc.HBA }}</b></li>
                 <li>회전 가능한 결합: <b>{{ rdkit_desc.RotatableBonds }}</b></li>
+                <li>Ring 수 (RingCount): <b>{{ rdkit_desc.RingCount }}</b></li>
+                <li>Heavy Atom 수: <b>{{ rdkit_desc.HeavyAtomCount }}</b></li>
             </ul>
         </div>
+
+        {% if model_r2 %}
+        <div style="font-size: 0.85em; margin-top: 4px;">
+            모델 성능 (R²): <b>{{ model_r2|floatformat:3 }}</b>
+        </div>
+        {% endif %}
         {% endif %}
 
     </div>

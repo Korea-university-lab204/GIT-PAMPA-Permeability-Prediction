@@ -34,6 +34,10 @@ _model = None
 _scaler = None
 _input_columns = None
 
+# meta.pkl에 r2_score가 없을 때 사용할 예비 값
+# 실제 모델 성능(R^2)을 알고 있다면 여기를 수정해서 넣어도 됨.
+MODEL_R2_FALLBACK = 0.0
+
 
 # --------- 공통 유틸 ---------
 def load_artifacts():
@@ -44,6 +48,7 @@ def load_artifacts():
     model = joblib.load(MODEL_PATH)
     scaler = joblib.load(SCALER_PATH)
     meta = joblib.load(META_PATH)
+
     input_columns = meta["input_columns"]
 
     _model = model
@@ -66,6 +71,21 @@ def calc_descriptors_for_smiles(smiles: str):
         func = getattr(Descriptors, name)
         values.append(func(mol))
     return values
+
+
+# --------- 모델 R^2 ---------
+def get_model_r2():
+    """
+    meta.pkl에 'r2_score'가 들어 있다면 그 값을 사용하고,
+    없다면 MODEL_R2_FALLBACK 값을 반환.
+    """
+    try:
+        meta = joblib.load(META_PATH)
+        if isinstance(meta, dict) and "r2_score" in meta:
+            return meta["r2_score"]
+    except Exception:
+        pass
+    return MODEL_R2_FALLBACK
 
 
 # --------- 단일 포인트 예측 / 감응도 ---------
@@ -116,14 +136,14 @@ def get_basic_rdkit_descriptors(smiles: str):
     mol = _mol_from_smiles(smiles)
 
     desc = {
-        "MolWt": Descriptors.MolWt(mol),                             # 분자량
-        "LogP": Crippen.MolLogP(mol),                                # 계산 logP
-        "TPSA": rdMolDescriptors.CalcTPSA(mol),                      # 극성 표면적
-        "HBD": Lipinski.NumHDonors(mol),                             # H-bond donors
-        "HBA": Lipinski.NumHAcceptors(mol),                          # H-bond acceptors
-        "RotatableBonds": Lipinski.NumRotatableBonds(mol),           # 회전 가능한 결합 수
-        "RingCount": Lipinski.RingCount(mol),                        # ring 개수
-        "HeavyAtomCount": Descriptors.HeavyAtomCount(mol),           # heavy atom 수
+        "MolWt": Descriptors.MolWt(mol),
+        "LogP": Crippen.MolLogP(mol),
+        "TPSA": rdMolDescriptors.CalcTPSA(mol),
+        "HBD": Lipinski.NumHDonors(mol),
+        "HBA": Lipinski.NumHAcceptors(mol),
+        "RotatableBonds": Lipinski.NumRotatableBonds(mol),
+        "RingCount": Lipinski.RingCount(mol),
+        "HeavyAtomCount": Descriptors.HeavyAtomCount(mol),
     }
     return desc
 
@@ -224,7 +244,7 @@ def make_plotly_surface_with_slider(smiles, fixed_var="dmso", num_points=25, n_s
         title=f"logPe Surface (fixed {slider_label})",
         width=900,
         height=800,
-        margin=dict(l=0, r=0, t=80, b=100),
+        margin=dict(l=0, r=0, t=80, b=160),
         scene=dict(
             xaxis_title=x_label,
             yaxis_title=y_label,

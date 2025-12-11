@@ -4,6 +4,7 @@ from .surface_utils import (
     compute_local_sensitivity,
     get_basic_rdkit_descriptors,
     predict_single,
+    get_model_r2,
     LEC_MIN, LEC_MAX, PH_MIN, PH_MAX, DMSO_MIN, DMSO_MAX,
 )
 
@@ -18,6 +19,7 @@ def smiles_3d_view(request):
     sensitivity = None
     rdkit_desc = None
     single_pred = None
+    model_r2 = get_model_r2()
 
     # 단일 예측 입력값 기본값
     lec_value = (LEC_MIN + LEC_MAX) / 2
@@ -26,9 +28,7 @@ def smiles_3d_view(request):
 
     if request.method == "POST":
 
-        # =======================
         # 1) 그래프 생성 버튼
-        # =======================
         if "create_graph" in request.POST:
             smiles_value = request.POST.get("smiles", "").strip()
             fixed_var = request.POST.get("fixed_var", "dmso").strip().lower()
@@ -49,7 +49,7 @@ def smiles_3d_view(request):
                     # RDKit 특성
                     rdkit_desc = get_basic_rdkit_descriptors(smiles_value)
 
-                    # 그래프와 함께 보여줄 "기본 조건"에서의 변수 민감도
+                    # 기본 조건에서의 변수 민감도 (그래프와 함께 보여줄 용도)
                     base_lec = (LEC_MIN + LEC_MAX) / 2
                     base_ph = (PH_MIN + PH_MAX) / 2
                     base_dmso = (DMSO_MIN + DMSO_MAX) / 2
@@ -58,7 +58,7 @@ def smiles_3d_view(request):
                         smiles_value, base_lec, base_ph, base_dmso
                     )
 
-                    # 단일 예측 입력값은 기본값 그대로 유지
+                    # 단일 예측 박스 입력값도 기본값 세팅
                     lec_value = base_lec
                     ph_value = base_ph
                     dmso_value = base_dmso
@@ -66,11 +66,8 @@ def smiles_3d_view(request):
                 except Exception as e:
                     error = f"오류 발생: {str(e)}"
 
-        # =======================
         # 2) 단일 예측 Confirm 버튼
-        # =======================
         elif "single_predict" in request.POST:
-            # 숨겨서 가져온 SMILES / fixed_var
             smiles_value = request.POST.get("smiles_hidden", "").strip()
             fixed_var = request.POST.get("fixed_var_hidden", "dmso").strip().lower()
 
@@ -95,7 +92,7 @@ def smiles_3d_view(request):
 
                 if not error:
                     try:
-                        # 그래프도 다시 생성해서 안 사라지게 유지
+                        # 그래프 유지 (다시 생성)
                         fig = make_plotly_surface_with_slider(
                             smiles=smiles_value,
                             fixed_var=fixed_var,
@@ -133,5 +130,6 @@ def smiles_3d_view(request):
         "ph_value": ph_value,
         "dmso_value": dmso_value,
 
+        "model_r2": model_r2,
         "error": error,
     })

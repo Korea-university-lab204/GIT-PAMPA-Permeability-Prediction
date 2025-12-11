@@ -1,0 +1,78 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>logPe 3D Surface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .selector {
+            margin: 20px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 700px;
+            border: none;
+            display: none;  /* 처음엔 안 보이게 */
+        }
+        iframe.active {
+            display: block; /* 선택된 것만 보이게 */
+        }
+    </style>
+    <script>
+        function showPlot(which) {
+            const iframes = document.querySelectorAll("iframe.plot-frame");
+            iframes.forEach(function (frame) {
+                frame.classList.remove("active");
+            });
+
+            const target = document.getElementById("plot-" + which);
+            if (target) {
+                target.classList.add("active");
+            }
+        }
+
+        window.onload = function() {
+            // 처음에는 DMSO 고정 그래프 보여주기
+            showPlot("dmso");
+        };
+    </script>
+</head>
+<body>
+
+<h1>logPe 3D Surface</h1>
+<p>고정 변수를 선택하고, 각 슬라이더를 조절해 보세요.</p>
+
+<div class="selector">
+    <label>고정 변수 선택: </label>
+    <button type="button" onclick="showPlot('dmso')">DMSO 고정</button>
+    <button type="button" onclick="showPlot('lec')">Lecithin 고정</button>
+    <button type="button" onclick="showPlot('ph')">pH 고정</button>
+</div>
+
+<!-- DMSO 고정 Plot -->
+<iframe
+    id="plot-dmso"
+    class="plot-frame"
+    src="{% static 'predictor/plots/logpe_dmso_v2.html' %}">
+</iframe>
+
+<!-- Lecithin 고정 Plot -->
+<iframe
+    id="plot-lec"
+    class="plot-frame"
+    src="{% static 'predictor/plots/logpe_lec_v2.html' %}">
+</iframe>
+
+<!-- pH 고정 Plot -->
+<iframe
+    id="plot-ph"
+    class="plot-frame"
+    src="{% static 'predictor/plots/logpe_ph_v2.html' %}">
+</iframe>
+
+</body>
+</html>

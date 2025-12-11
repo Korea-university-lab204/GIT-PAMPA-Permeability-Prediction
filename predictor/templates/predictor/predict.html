@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Permeability Prediction</title>
+</head>
+<body>
+    <h1>SMILES Permeability Prediction</h1>
+
+    {% if r2 %}
+        <p><b>모델 R² (검증 세트 기준):</b> {{ r2|floatformat:3 }}</p>
+    {% endif %}
+
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    {% if warnings %}
+        <ul style="color:darkorange;">
+            {% for w in warnings %}
+                <li>{{ w }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Lecithin(%) :</label>
+        <input type="text" name="lecithin" value="{{ lecithin }}"><br><br>
+
+        <label>pH :</label>
+        <input type="text" name="ph" value="{{ ph }}"><br><br>
+
+        <label>DMSO_Conc (w/v%) :</label>
+        <input type="text" name="dmso" value="{{ dmso }}"><br><br>
+
+        <label>SMILES 입력 (여러 줄 가능):</label><br>
+        <textarea name="smiles_input" rows="10" cols="60">{{ smiles_text }}</textarea><br><br>
+
+        <button type="submit">예측하기</button>
+    </form>
+
+    <hr>
+
+    {% if result %}
+        <h2>예측 결과</h2>
+        <table border="1" cellpadding="5">
+            <tr>
+                <th>SMILES</th>
+                <th>예측 logPe</th>
+            </tr>
+            {% for s, r in result %}
+            <tr>
+                <td>{{ s }}</td>
+                <td>{{ r }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</body>
+</html>

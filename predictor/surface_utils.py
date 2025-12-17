@@ -36,7 +36,7 @@ _input_columns = None
 
 # meta.pkl에 r2_score가 없을 때 사용할 예비 값
 # 실제 모델 성능(R^2)을 알고 있다면 여기를 수정해서 넣어도 됨.
-MODEL_R2_FALLBACK = 0.84
+MODEL_R2_FALLBACK = 0.0
 
 
 # --------- 공통 유틸 ---------

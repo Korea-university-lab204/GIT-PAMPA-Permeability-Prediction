@@ -2,175 +2,192 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>Korea University GIT-PAMPA Permeability Prediction Tool</title>
+  <meta charset="UTF-8" />
+  <title>Permeability 3D Tool</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1400px;
-            margin: 20px auto;
-        }
-        input[type="text"], input[type="number"] {
-            padding: 5px;
-        }
-        input[type="text"] {
-            width: 360px;
-        }
-        button {
-            padding: 6px 12px;
-        }
-        .layout {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            align-items: flex-start;
-        }
-        .left-panel {
-            flex: 2;
-        }
-        .right-panel {
-	flex: 1;
-	display: grid;
-	grid-template-columns: 1fr 1fr;   /* 2열 */
-	grid-template-rows: auto auto auto; /* 3행 */
-	gap: 16px;
-	margin-top: 20px;
-	align-items: start;
-}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1400px;
+      margin: 20px auto;
+    }
 
-    </style>
+    input[type="text"], input[type="number"] {
+      padding: 5px;
+    }
+    input[type="text"] {
+      width: 360px;
+    }
+    button {
+      padding: 6px 12px;
+    }
+
+    .layout {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+      align-items: flex-start;
+    }
+
+    .left-panel { flex: 2; }
+
+    /* ✅ 오른쪽 패널: 2열 grid */
+    .right-panel {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;     /* 2열 */
+      grid-template-rows: auto auto auto; /* 3행 */
+      gap: 16px;
+      margin-top: 20px;
+      align-items: start;
+    }
+
+    /* ✅ 박스 테두리/배경 */
+    .box {
+      border: 1px solid #ccc;
+      background: #fafafa;
+      padding: 10px 14px;
+    }
+
+    .box h3 {
+      margin: 0 0 8px 0;
+    }
+
+    .error {
+      color: red;
+      margin-top: 8px;
+    }
+  </style>
 </head>
+
 <body>
+  <h1>Korea University GIT-PAMPA Permeability Prediction Tool</h1>
 
-<h1>Korea University GIT-PAMPA Permeability Prediction Tool</h1>
-
-<!-- A. 그래프 생성용 폼 -->
-<form method="post">
+  <!-- 그래프 생성 폼 -->
+  <form method="post">
     {% csrf_token %}
     <label>SMILES:</label>
     <input type="text" name="smiles" value="{{ smiles_value }}">
 
     <span style="margin-left:20px;">고정 변수:</span>
     <label style="margin-left:8px;">
-        <input type="radio" name="fixed_var" value="dmso"
-               {% if fixed_var == "dmso" %}checked{% endif %}> DMSO
+      <input type="radio" name="fixed_var" value="dmso"
+             {% if fixed_var == "dmso" %}checked{% endif %}> DMSO
     </label>
     <label style="margin-left:8px;">
-        <input type="radio" name="fixed_var" value="lec"
-               {% if fixed_var == "lec" %}checked{% endif %}> Lecithin
+      <input type="radio" name="fixed_var" value="lec"
+             {% if fixed_var == "lec" %}checked{% endif %}> Lecithin
     </label>
     <label style="margin-left:8px;">
-        <input type="radio" name="fixed_var" value="ph"
-               {% if fixed_var == "ph" %}checked{% endif %}> pH
+      <input type="radio" name="fixed_var" value="ph"
+             {% if fixed_var == "ph" %}checked{% endif %}> pH
     </label>
 
     <button type="submit" name="create_graph" style="margin-left:12px;">그래프 생성</button>
-</form>
+  </form>
 
-{% if error %}
-<div class="error">{{ error }}</div>
-{% endif %}
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
 
-<div class="layout">
+  <div class="layout">
     <!-- 왼쪽: 그래프 -->
     <div class="left-panel">
-        {% if plot_html %}
-            {{ plot_html|safe }}
-        {% endif %}
+      {% if plot_html %}
+        {{ plot_html|safe }}
+      {% endif %}
     </div>
 
-    <!-- 오른쪽: 위 = 변수 민감도, 가운데 = 단일 예측, 아래 = RDKit + R2 -->
-<div class="right-panel">
+    <!-- 오른쪽: 박스 4개 (grid로 정렬 고정) -->
+    <div class="right-panel">
 
-    <!-- 1) 모델 성능 (왼쪽열 1행) -->
-    <div class="box" style="grid-column: 1; grid-row: 1;">
+      <!-- (1) 모델 성능 -->
+      <div class="box" style="grid-column: 1; grid-row: 1;">
         <h3>모델 성능</h3>
         {% if model_r2 %}
-            <div style="font-size: 0.95em;">
-                R² = <b>{{ model_r2|floatformat:3 }}</b>
-            </div>
+          <div style="font-size: 0.95em;">
+            R² = <b>{{ model_r2|floatformat:3 }}</b>
+          </div>
         {% else %}
-            <div style="font-size: 0.90em; color: #666;">
-                R² 정보를 불러오지 못했습니다.
-            </div>
+          <div style="font-size: 0.90em; color: #666;">
+            R² 정보를 불러오지 못했습니다.
+          </div>
         {% endif %}
-    </div>
+      </div>
 
-    <!-- 2) 변수 민감도 (왼쪽열 2행) -->
-    <div class="box" style="grid-column: 1; grid-row: 2;">
+      <!-- (2) RDKit (오른쪽 열 전체 높이) -->
+      <div class="box" style="grid-column: 2; grid-row: 1 / span 3;">
+        <h3>RDKit 분자 특성</h3>
+        {% if rdkit_desc %}
+          <ul>
+            <li>분자량 (MolWt): <b>{{ rdkit_desc.MolWt|floatformat:2 }}</b></li>
+            <li>logP: <b>{{ rdkit_desc.LogP|floatformat:2 }}</b></li>
+            <li>극성 표면적 (TPSA): <b>{{ rdkit_desc.TPSA|floatformat:2 }}</b> Å²</li>
+            <li>H-bond Donors (HBD): <b>{{ rdkit_desc.HBD }}</b></li>
+            <li>H-bond Acceptors (HBA): <b>{{ rdkit_desc.HBA }}</b></li>
+            <li>회전 가능한 결합: <b>{{ rdkit_desc.RotatableBonds }}</b></li>
+            <li>Ring 수 (RingCount): <b>{{ rdkit_desc.RingCount }}</b></li>
+            <li>Heavy Atom 수: <b>{{ rdkit_desc.HeavyAtomCount }}</b></li>
+          </ul>
+        {% else %}
+          <div style="font-size: 0.90em; color: #666;">
+            그래프 생성 후 표시됩니다.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- (3) 변수 민감도 -->
+      <div class="box" style="grid-column: 1; grid-row: 2;">
         <h3>변수 민감도 (Local Sensitivity)</h3>
         {% if sensitivity %}
-            <p>각 변수 변화 시 ΔlogPe:</p>
-            <ul>
-                <li>Lec (+1): <b>{{ sensitivity.lec|floatformat:3 }}</b></li>
-                <li>pH (+0.1): <b>{{ sensitivity.ph|floatformat:3 }}</b></li>
-                <li>DMSO (+1): <b>{{ sensitivity.dmso|floatformat:3 }}</b></li>
-            </ul>
+          <p>각 변수 변화 시 ΔlogPe:</p>
+          <ul>
+            <li>Lec (+1): <b>{{ sensitivity.lec|floatformat:3 }}</b></li>
+            <li>pH (+0.1): <b>{{ sensitivity.ph|floatformat:3 }}</b></li>
+            <li>DMSO (+1): <b>{{ sensitivity.dmso|floatformat:3 }}</b></li>
+          </ul>
         {% else %}
-            <div style="font-size: 0.90em; color: #666;">
-                그래프 생성 후 표시됩니다.
-            </div>
+          <div style="font-size: 0.90em; color: #666;">
+            그래프 생성 후 표시됩니다.
+          </div>
         {% endif %}
-    </div>
+      </div>
 
-    <!-- 3) 단일 조건 예측 (왼쪽열 3행) -->
-    <div class="box" style="grid-column: 1; grid-row: 3;">
+      <!-- (4) 단일 조건 예측 -->
+      <div class="box" style="grid-column: 1; grid-row: 3;">
         <h3>단일 조건 예측</h3>
         <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
-            <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">
+          {% csrf_token %}
+          <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
+          <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">
 
-            <p>
-                Lecithin(%):
-                <input type="number" name="lec_value"
-                       step="0.5" value="{{ lec_value|floatformat:2 }}">
-            </p>
-            <p>
-                pH:
-                <input type="number" name="ph_value"
-                       step="0.1" value="{{ ph_value|floatformat:2 }}">
-            </p>
-            <p>
-                DMSO(%):
-                <input type="number" name="dmso_value"
-                       step="0.5" value="{{ dmso_value|floatformat:2 }}">
-            </p>
+          <p>
+            Lecithin(%):
+            <input type="number" name="lec_value" step="0.5"
+                   value="{{ lec_value|floatformat:2 }}">
+          </p>
+          <p>
+            pH:
+            <input type="number" name="ph_value" step="0.1"
+                   value="{{ ph_value|floatformat:2 }}">
+          </p>
+          <p>
+            DMSO(%):
+            <input type="number" name="dmso_value" step="0.5"
+                   value="{{ dmso_value|floatformat:2 }}">
+          </p>
 
-            <button type="submit" name="single_predict">Confirm</button>
+          <button type="submit" name="single_predict">Confirm</button>
         </form>
 
         {% if single_pred %}
-        <p style="margin-top:8px;">
+          <p style="margin-top:8px;">
             예측 logPe: <b>{{ single_pred|floatformat:3 }}</b>
-        </p>
+          </p>
         {% endif %}
+      </div>
+
     </div>
-
-    <!-- 4) RDKit (오른쪽열, 1~3행 전체 차지) -->
-    <div class="box" style="grid-column: 2; grid-row: 1 / span 3;">
-        <h3>RDKit 분자 특성</h3>
-        {% if rdkit_desc %}
-            <ul>
-                <li>분자량 (MolWt): <b>{{ rdkit_desc.MolWt|floatformat:2 }}</b></li>
-                <li>logP: <b>{{ rdkit_desc.LogP|floatformat:2 }}</b></li>
-                <li>극성 표면적 (TPSA): <b>{{ rdkit_desc.TPSA|floatformat:2 }}</b> Å²</li>
-                <li>H-bond Donors (HBD): <b>{{ rdkit_desc.HBD }}</b></li>
-                <li>H-bond Acceptors (HBA): <b>{{ rdkit_desc.HBA }}</b></li>
-                <li>회전 가능한 결합: <b>{{ rdkit_desc.RotatableBonds }}</b></li>
-                <li>Ring 수 (RingCount): <b>{{ rdkit_desc.RingCount }}</b></li>
-                <li>Heavy Atom 수: <b>{{ rdkit_desc.HeavyAtomCount }}</b></li>
-            </ul>
-        {% else %}
-            <div style="font-size: 0.90em; color: #666;">
-                그래프 생성 후 표시됩니다.
-            </div>
-        {% endif %}
-    </div>
-
-</div>
-
-
+  </div>
 </body>
 </html>

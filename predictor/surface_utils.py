@@ -74,18 +74,43 @@ def calc_descriptors_for_smiles(smiles: str):
 
 
 # --------- 모델 R^2 ---------
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+
+DATA_PATH = BASE_DIR / "GI_PAMPA.csv"
+TARGET_COL = "logPe"   # ⚠️ 실제 타깃 컬럼명 확인해서 맞추기
+
 def get_model_r2():
-    """
-    meta.pkl에 'r2_score'가 들어 있다면 그 값을 사용하고,
-    없다면 MODEL_R2_FALLBACK 값을 반환.
-    """
     try:
-        meta = joblib.load(META_PATH)
-        if isinstance(meta, dict) and "r2_score" in meta:
-            return meta["r2_score"]
-    except Exception:
-        pass
-    return MODEL_R2_FALLBACK
+        # 모델 아티팩트 로드
+        model, scaler, input_columns = load_artifacts()
+
+        # 데이터 로드
+        df = pd.read_csv(DATA_PATH)
+
+        # 입력 / 타깃 분리
+        X = df[input_columns]
+        y = df[TARGET_COL]
+
+        # Train / Test split (학습 당시와 동일하게)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+        # 스케일링
+        X_test_scaled = scaler.transform(X_test)
+
+        # 예측
+        y_pred = model.predict(X_test_scaled)
+
+        # R² 계산
+        r2 = r2_score(y_test, y_pred)
+        return round(float(r2), 4)
+
+    except Exception as e:
+        print(f"[get_model_r2 ERROR] {e}")
+        return None
+
 
 
 # --------- 단일 포인트 예측 / 감응도 ---------

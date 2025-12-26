@@ -5,7 +5,6 @@ from .surface_utils import (
     compute_local_sensitivity,
     get_basic_rdkit_descriptors,
     predict_single,
-    get_model_r2,
     LEC_MIN, LEC_MAX, PH_MIN, PH_MAX, DMSO_MIN, DMSO_MAX,
 )
 

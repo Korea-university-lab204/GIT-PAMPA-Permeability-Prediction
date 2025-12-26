@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error
 
 import joblib  # pip install joblib 필요
 
@@ -98,10 +99,14 @@ def main():
     # Calculate metrics
     rmse = (mean_squared_error(Y_test, Y_pred)) ** 0.5
     r2 = r2_score(Y_test, Y_pred)
+    mae = mean_absolute_error(Y_test, Y_pred)
+    mape = (np.abs((Y_test - Y_pred) / Y_test).mean()) * 100  # MAPE (%)
 
     # Print results
     print(f"RMSE: {rmse:.4f}")
-    print(f"R-square: {r2:.4f}")
+    print(f"R²: {r2:.4f}")
+    print(f"MAE: {mae:.4f}")
+    print(f"MAPE: {mape:.2f}%")
 
     # 학습에 사용된 feature 순서 저장 (중요!)
     feature_order = X_scaled_train.columns.tolist()

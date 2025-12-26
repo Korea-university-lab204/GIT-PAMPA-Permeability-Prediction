@@ -114,11 +114,14 @@ def main():
     print("모델/스케일러/메타데이터 저장 중...")
     joblib.dump(SVR_Model_logPe, os.path.join(BASE_DIR, "model.pkl"))
     joblib.dump(scaler, os.path.join(BASE_DIR, "scaler.pkl"))
+
     meta = {
-        "input_columns": feature_order,          # 나중에 ml_model에서 사용
-        "cond_means": cond_means.to_dict(),      # (옵션) 조건 평균
+        "input_columns": feature_order,
+        "cond_means": cond_means.to_dict(),
         "rmse": float(rmse),
         "r2": float(r2),
+        "mae": float(mae),
+        "mape": float(mape),
     }
     joblib.dump(meta, os.path.join(BASE_DIR, "meta.pkl"))
 

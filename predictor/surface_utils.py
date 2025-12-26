@@ -80,21 +80,14 @@ from sklearn.metrics import r2_score
 DATA_PATH = BASE_DIR / "GI_PAMPA.csv"
 TARGET_COL = "logPe"   # ⚠️ 실제 타깃 컬럼명 확인해서 맞추기
 
-def get_model_r2():
-    print("🔍 get_model_r2 실행됨")
+def get_model_meta():
     try:
         meta = joblib.load(META_PATH)
-        print(f"📦 meta 불러오기 성공: {meta.keys()}")
-
-        if isinstance(meta, dict) and "r2" in meta:
-            print(f"✅ R² 값 찾음: {meta['r2']}")
-            return meta["r2"]
-        else:
-            print("⚠️ meta에 'r2' 키가 없음")
+        print(f"✅ meta 로딩 성공: {meta.keys()}")
+        return meta
     except Exception as e:
-        print(f"❌ get_model_r2 ERROR: {e}")
-    return None
-
+        print(f"[get_model_meta ERROR] {e}")
+        return {}
 
 
 # --------- 단일 포인트 예측 / 감응도 ---------

@@ -104,15 +104,15 @@
       <!-- (1) 모델 성능 -->
       <div class="box" style="grid-column: 1; grid-row: 1;">
         <h3>모델 성능</h3>
-        {% if model_r2 %}
-          <div style="font-size: 0.95em;">
-            R² = <b>{{ model_r2|floatformat:3 }}</b>
-          </div>
+        {% if model_meta.r2 %}
+          <p>R²: {{ model_meta.r2 }}</p>
+          <p>RMSE: {{ model_meta.rmse }}</p>
+          <p>MAE: {{ model_meta.mae }}</p>
+          <p>MAPE: {{ model_meta.mape }}%</p>
         {% else %}
-          <div style="font-size: 0.90em; color: #666;">
-            R² 정보를 불러오지 못했습니다.
-          </div>
+          <p>모델 성능 정보를 불러오지 못했습니다.</p>
         {% endif %}
+
       </div>
 
       <!-- (2) RDKit (오른쪽 열 전체 높이) -->

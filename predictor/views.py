@@ -1,3 +1,4 @@
+from .surface_utils import get_model_meta
 from django.shortcuts import render
 from .surface_utils import (
     make_plotly_surface_with_slider,
@@ -19,7 +20,7 @@ def smiles_3d_view(request):
     sensitivity = None
     rdkit_desc = None
     single_pred = None
-    model_r2 = get_model_r2()
+    model_meta = get_model_meta()
 
     # 단일 예측 입력값 기본값
     lec_value = (LEC_MIN + LEC_MAX) / 2
@@ -130,6 +131,6 @@ def smiles_3d_view(request):
         "ph_value": ph_value,
         "dmso_value": dmso_value,
 
-        "model_r2": model_r2,
+        "model_meta": model_meta,
         "error": error,
     })

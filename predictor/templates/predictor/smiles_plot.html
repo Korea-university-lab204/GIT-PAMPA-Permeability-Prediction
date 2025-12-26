@@ -105,10 +105,10 @@
       <div class="box" style="grid-column: 1; grid-row: 1;">
         <h3>모델 성능</h3>
         {% if model_meta.r2 %}
-          <p>R²: {{ model_meta.r2 }}</p>
-          <p>RMSE: {{ model_meta.rmse }}</p>
-          <p>MAE: {{ model_meta.mae }}</p>
-          <p>MAPE: {{ model_meta.mape }}%</p>
+          <p>R²: {{ model_meta.r2|floatformat:4 }}</p>
+          <p>RMSE: {{ model_meta.rmse|floatformat:4 }}</p>
+          <p>MAE: {{ model_meta.mae|floatformat:4 }}</p>
+          <p>MAPE: {{ model_meta.mape|floatformat:4 }}%</p>
         {% else %}
           <p>모델 성능 정보를 불러오지 못했습니다.</p>
         {% endif %}

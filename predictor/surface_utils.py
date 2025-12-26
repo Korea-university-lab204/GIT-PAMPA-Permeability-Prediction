@@ -81,35 +81,20 @@ DATA_PATH = BASE_DIR / "GI_PAMPA.csv"
 TARGET_COL = "logPe"   # ⚠️ 실제 타깃 컬럼명 확인해서 맞추기
 
 def get_model_r2():
+    print("🔍 get_model_r2 실행됨")
     try:
-        # 모델 아티팩트 로드
-        model, scaler, input_columns = load_artifacts()
+        meta = joblib.load(META_PATH)
+        print(f"📦 meta 불러오기 성공: {meta.keys()}")
 
-        # 데이터 로드
-        df = pd.read_csv(DATA_PATH)
-
-        # 입력 / 타깃 분리
-        X = df[input_columns]
-        y = df[TARGET_COL]
-
-        # Train / Test split (학습 당시와 동일하게)
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
-        )
-
-        # 스케일링
-        X_test_scaled = scaler.transform(X_test)
-
-        # 예측
-        y_pred = model.predict(X_test_scaled)
-
-        # R² 계산
-        r2 = r2_score(y_test, y_pred)
-        return round(float(r2), 4)
-
+        if isinstance(meta, dict) and "r2" in meta:
+            print(f"✅ R² 값 찾음: {meta['r2']}")
+            return meta["r2"]
+        else:
+            print("⚠️ meta에 'r2' 키가 없음")
     except Exception as e:
-        print(f"[get_model_r2 ERROR] {e}")
-        return None
+        print(f"❌ get_model_r2 ERROR: {e}")
+    return None
+
 
 
 

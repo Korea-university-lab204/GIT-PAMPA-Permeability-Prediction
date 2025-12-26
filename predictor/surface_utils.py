@@ -97,7 +97,6 @@ def get_model_r2():
 
 
 
-
 # --------- 단일 포인트 예측 / 감응도 ---------
 def predict_single(smiles, lec, ph, dmso):
     model, scaler, input_columns = load_artifacts()

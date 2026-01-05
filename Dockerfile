@@ -30,7 +30,8 @@ RUN python -m playwright install chromium
 COPY . .
 
 # 8) 컨테이너에서 열 포트
-EXPOSE 8000
+EXPOSE 10000
 
-# 9) gunicorn으로 Django 실행
-CMD ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Render는 PORT 환경변수로 포트를 지정함
+CMD ["sh", "-c", "gunicorn mysite.wsgi:application --bind 0.0.0.0:${PORT}"]
+

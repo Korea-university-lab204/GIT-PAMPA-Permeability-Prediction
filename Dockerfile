@@ -33,5 +33,6 @@ COPY . .
 EXPOSE 10000
 
 # Render는 PORT 환경변수로 포트를 지정함
-CMD ["sh", "-c", "gunicorn mysite.wsgi:application --bind 0.0.0.0:${PORT}"]
+CMD ["sh", "-c", "gunicorn mysite.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 180"]
+
 

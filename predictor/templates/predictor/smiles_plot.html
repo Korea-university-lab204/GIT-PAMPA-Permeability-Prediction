@@ -31,31 +31,32 @@
 
     .left-panel { flex: 2; }
 
-    /* ✅ 오른쪽 패널: 2열 grid */
     .right-panel {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr 1fr;     /* 2열 */
-      grid-template-rows: auto auto auto; /* 3행 */
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
       gap: 16px;
       margin-top: 20px;
       align-items: start;
     }
 
-    /* ✅ 박스 테두리/배경 */
     .box {
       border: 1px solid #ccc;
       background: #fafafa;
       padding: 10px 14px;
     }
 
-    .box h3 {
-      margin: 0 0 8px 0;
-    }
+    .box h3 { margin: 0 0 8px 0; }
 
     .error {
       color: red;
       margin-top: 8px;
+    }
+
+    /* ✅ PDF(인쇄)일 때 안 보이게 */
+    @media print {
+      .no-print { display: none !important; }
     }
   </style>
 </head>
@@ -63,8 +64,29 @@
 <body>
   <h1>Korea University GIT-PAMPA Permeability Prediction Tool</h1>
 
-  <!-- 그래프 생성 폼 -->
-  <form method="post">
+  <!-- ✅ PDF 다운로드 버튼 (PDF에선 숨김) -->
+  <div class="no-print" style="margin: 10px 0 18px 0; display:flex; gap:10px; align-items:center;">
+    <form method="post" action="{% url 'permeability_pdf' %}" style="margin:0;">
+      {% csrf_token %}
+      <!-- 현재 화면 상태를 PDF로 넘기기 위한 hidden -->
+      <input type="hidden" name="smiles" value="{{ smiles_value }}">
+      <input type="hidden" name="fixed_var" value="{{ fixed_var }}">
+      <input type="hidden" name="lec_value" value="{{ lec_value }}">
+      <input type="hidden" name="ph_value" value="{{ ph_value }}">
+      <input type="hidden" name="dmso_value" value="{{ dmso_value }}">
+      <!-- 어떤 화면을 PDF로 만들지 힌트 (원하면 사용) -->
+      <input type="hidden" name="mode" value="current">
+      <button type="submit">PDF 다운로드</button>
+    </form>
+
+    <span style="color:#666; font-size:0.9em;">
+      현재 화면(그래프/박스 포함)을 PDF로 저장합니다.
+    </span>
+  </div>
+
+  <!-- ✅ 그래프 생성 폼 (PDF에는 숨김) -->
+  {% if not is_pdf %}
+  <form method="post" class="no-print">
     {% csrf_token %}
     <label>SMILES:</label>
     <input type="text" name="smiles" value="{{ smiles_value }}">
@@ -85,23 +107,21 @@
 
     <button type="submit" name="create_graph" style="margin-left:12px;">그래프 생성</button>
   </form>
+  {% endif %}
 
   {% if error %}
   <div class="error">{{ error }}</div>
   {% endif %}
 
   <div class="layout">
-    <!-- 왼쪽: 그래프 -->
     <div class="left-panel">
       {% if plot_html %}
         {{ plot_html|safe }}
       {% endif %}
     </div>
 
-    <!-- 오른쪽: 박스 4개 (grid로 정렬 고정) -->
     <div class="right-panel">
 
-      <!-- (1) 모델 성능 -->
       <div class="box" style="grid-column: 1; grid-row: 1;">
         <h3>모델 성능</h3>
         {% if model_meta.r2 %}
@@ -112,10 +132,8 @@
         {% else %}
           <p>모델 성능 정보를 불러오지 못했습니다.</p>
         {% endif %}
-
       </div>
 
-      <!-- (2) RDKit (오른쪽 열 전체 높이) -->
       <div class="box" style="grid-column: 2; grid-row: 1 / span 3;">
         <h3>RDKit 분자 특성</h3>
         {% if rdkit_desc %}
@@ -136,7 +154,6 @@
         {% endif %}
       </div>
 
-      <!-- (3) 변수 민감도 -->
       <div class="box" style="grid-column: 1; grid-row: 2;">
         <h3>변수 민감도 (Local Sensitivity)</h3>
         {% if sensitivity %}
@@ -153,10 +170,12 @@
         {% endif %}
       </div>
 
-      <!-- (4) 단일 조건 예측 -->
       <div class="box" style="grid-column: 1; grid-row: 3;">
         <h3>단일 조건 예측</h3>
-        <form method="post">
+
+        <!-- ✅ 단일조건 폼도 PDF에선 숨김 -->
+        {% if not is_pdf %}
+        <form method="post" class="no-print">
           {% csrf_token %}
           <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
           <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">
@@ -179,6 +198,7 @@
 
           <button type="submit" name="single_predict">Confirm</button>
         </form>
+        {% endif %}
 
         {% if single_pred %}
           <p style="margin-top:8px;">

@@ -2,6 +2,11 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from .surface_utils import get_model_meta
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
+
 
 from .surface_utils import (
     make_plotly_surface_with_slider,
@@ -206,42 +211,106 @@ def permeability_pdf(request):
         return HttpResponse("Method Not Allowed", status=405)
 
     context = _build_context_for_pdf(request.POST)
-    html = render_to_string("predictor/smiles_plot.html", context, request=request)
+    if context.get("error"):
+        return HttpResponse(context["error"], status=400)
 
-    from playwright.sync_api import sync_playwright
+    smiles_value = context["smiles_value"]
+    fixed_var = context["fixed_var"]
+    lec_value = float(context["lec_value"])
+    ph_value = float(context["ph_value"])
+    dmso_value = float(context["dmso_value"])
+    single_pred = context["single_pred"]
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--single-process",
-            ],
-        )
-        page = browser.new_page(viewport={"width": 1400, "height": 900})
+    # ✅ fixed_var에 해당하는 '고정값' 결정
+    if fixed_var == "dmso":
+        fixed_value = dmso_value
+        point_x, point_y = lec_value, ph_value
+    elif fixed_var == "lec":
+        fixed_value = lec_value
+        point_x, point_y = ph_value, dmso_value
+    else:  # ph
+        fixed_value = ph_value
+        point_x, point_y = lec_value, dmso_value
 
-        # ✅ 기본 30초 -> 120초로 여유 (PDF는 무거울 수 있음)
-        page.set_default_timeout(120_000)
+    # ✅ 3D surface 생성 + 단일조건 점 찍기
+    from .surface_utils import make_plotly_surface_static
+    fig = make_plotly_surface_static(smiles_value, fixed_var, fixed_value, num_points=30)
 
-        # ✅ load 대신 domcontentloaded (가벼움)
-        page.set_content(html, wait_until="domcontentloaded")
+    # 마커 추가
+    import plotly.graph_objects as go
+    fig.add_trace(go.Scatter3d(
+        x=[point_x], y=[point_y], z=[single_pred],
+        mode="markers",
+        marker=dict(size=6),
+        name="Single condition"
+    ))
 
-        # ✅ 렌더링 여유 (Plotly가 느릴 수 있음)
-        page.wait_for_timeout(1500)
+    # ✅ kaleido로 PNG export (Chromium 필요 없음)
+    png_bytes = fig.to_image(format="png", width=1100, height=700, scale=2)
 
-        page.emulate_media(media="print")
+    # ✅ PDF 생성 (ReportLab)
+    buf = BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    w, h = A4
 
-        pdf_bytes = page.pdf(
-            format="A4",
-            print_background=True,
-            margin={"top": "10mm", "right": "10mm", "bottom": "10mm", "left": "10mm"},
-        )
+    y = h - 40
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(40, y, "GIT-PAMPA Permeability Report")
+    y -= 18
 
-        page.close()
-        browser.close()
+    c.setFont("Helvetica", 9)
+    c.drawString(40, y, f"SMILES: {smiles_value}")
+    y -= 14
+    c.drawString(40, y, f"Fixed var: {fixed_var} | Lec={lec_value:.2f}, pH={ph_value:.2f}, DMSO={dmso_value:.2f}")
+    y -= 14
+    c.drawString(40, y, f"Pred logPe (single): {float(single_pred):.3f}")
+    y -= 18
+
+    # 3D 그래프 삽입
+    img = ImageReader(BytesIO(png_bytes))
+    img_w = w - 80
+    img_h = img_w * (700/1100)  # 비율 유지
+    c.drawImage(img, 40, y - img_h, width=img_w, height=img_h, preserveAspectRatio=True, anchor='c')
+    y -= (img_h + 18)
+
+    # 모델 성능 / 민감도 / RDKit 간단 출력 (원하면 표로도 가능)
+    meta = context["model_meta"]
+    sens = context["sensitivity"]
+    rd = context["rdkit_desc"]
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(40, y, "Model Performance")
+    y -= 14
+    c.setFont("Helvetica", 9)
+    c.drawString(40, y, f"R2={meta.get('r2', '')}  RMSE={meta.get('rmse', '')}  MAE={meta.get('mae','')}  MAPE={meta.get('mape','')}%")
+    y -= 18
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(40, y, "Local Sensitivity (around this condition)")
+    y -= 14
+    c.setFont("Helvetica", 9)
+    c.drawString(40, y, f"Lec(+1): {getattr(sens, 'lec', sens.get('lec')):.3f}   pH(+0.1): {getattr(sens, 'ph', sens.get('ph')):.3f}   DMSO(+1): {getattr(sens, 'dmso', sens.get('dmso')):.3f}")
+    y -= 18
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(40, y, "RDKit Descriptors")
+    y -= 14
+    c.setFont("Helvetica", 9)
+    # rd가 dict/obj 둘 다 대응
+    def _get(o, k, default=""):
+        return getattr(o, k, o.get(k, default)) if o is not None else default
+
+    c.drawString(40, y, f"MolWt={float(_get(rd,'MolWt',0)):.2f}  LogP={float(_get(rd,'LogP',0)):.2f}  TPSA={float(_get(rd,'TPSA',0)):.2f}")
+    y -= 12
+    c.drawString(40, y, f"HBD={_get(rd,'HBD','')}  HBA={_get(rd,'HBA','')}  RotB={_get(rd,'RotatableBonds','')}  Rings={_get(rd,'RingCount','')}")
+    y -= 12
+
+    c.showPage()
+    c.save()
+
+    pdf_bytes = buf.getvalue()
+    buf.close()
 
     resp = HttpResponse(pdf_bytes, content_type="application/pdf")
-    resp["Content-Disposition"] = 'attachment; filename="permeability_report.pdf"'
+    resp["Content-Disposition"] = 'attachment; filename=\"permeability_report.pdf\"'
     return resp

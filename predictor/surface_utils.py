@@ -6,6 +6,7 @@ from rdkit.Chem import Descriptors, Crippen, Lipinski, rdMolDescriptors
 import joblib
 import plotly.graph_objects as go
 
+
 # --------- 경로 & 상수 ---------
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "model.pkl"
@@ -260,4 +261,71 @@ def make_plotly_surface_with_slider(smiles, fixed_var="dmso", num_points=25, n_s
         }],
     )
 
+    return fig
+
+def make_plotly_surface_static(smiles, fixed_var, fixed_value, num_points=35):
+    """
+    fixed_var 하나는 fixed_value로 고정하고,
+    나머지 2개 축에 대해 surface(z=pred logPe)를 만든 뒤
+    단일조건 점(마커)을 찍은 '정적' 3D fig 생성
+    """
+    # 축 범위는 기존 상수 사용
+    if fixed_var == "dmso":
+        x_name, y_name = "lec", "ph"
+        x_min, x_max = LEC_MIN, LEC_MAX
+        y_min, y_max = PH_MIN, PH_MAX
+        dmso_fixed = fixed_value
+
+        xs = np.linspace(x_min, x_max, num_points)
+        ys = np.linspace(y_min, y_max, num_points)
+        X, Y = np.meshgrid(xs, ys)
+
+        Z = np.zeros_like(X, dtype=float)
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                Z[i, j] = predict_single(smiles, float(X[i, j]), float(Y[i, j]), float(dmso_fixed))
+
+    elif fixed_var == "lec":
+        x_name, y_name = "ph", "dmso"
+        x_min, x_max = PH_MIN, PH_MAX
+        y_min, y_max = DMSO_MIN, DMSO_MAX
+        lec_fixed = fixed_value
+
+        xs = np.linspace(x_min, x_max, num_points)
+        ys = np.linspace(y_min, y_max, num_points)
+        X, Y = np.meshgrid(xs, ys)
+
+        Z = np.zeros_like(X, dtype=float)
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                Z[i, j] = predict_single(smiles, float(lec_fixed), float(X[i, j]), float(Y[i, j]))
+
+    else:  # fixed_var == "ph"
+        x_name, y_name = "lec", "dmso"
+        x_min, x_max = LEC_MIN, LEC_MAX
+        y_min, y_max = DMSO_MIN, DMSO_MAX
+        ph_fixed = fixed_value
+
+        xs = np.linspace(x_min, x_max, num_points)
+        ys = np.linspace(y_min, y_max, num_points)
+        X, Y = np.meshgrid(xs, ys)
+
+        Z = np.zeros_like(X, dtype=float)
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                Z[i, j] = predict_single(smiles, float(X[i, j]), float(ph_fixed), float(Y[i, j]))
+
+    fig = go.Figure(data=[
+        go.Surface(x=X, y=Y, z=Z, showscale=False, opacity=0.95)
+    ])
+
+    fig.update_layout(
+        scene=dict(
+            xaxis_title=x_name,
+            yaxis_title=y_name,
+            zaxis_title="logPe",
+        ),
+        margin=dict(l=0, r=0, t=20, b=0),
+        title=f"3D Surface (fixed {fixed_var}={fixed_value})"
+    )
     return fig

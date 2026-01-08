@@ -54,7 +54,7 @@
       margin-top: 8px;
     }
 
-    /* ✅ PDF(인쇄)일 때 안 보이게 */
+    /* ✅ 인쇄 시 숨김 */
     @media print {
       .no-print { display: none !important; }
     }
@@ -63,26 +63,6 @@
 
 <body>
   <h1>Korea University GIT-PAMPA Permeability Prediction Tool</h1>
-
-  <!-- ✅ PDF 다운로드 버튼 (PDF에선 숨김) -->
-  <div class="no-print" style="margin: 10px 0 18px 0; display:flex; gap:10px; align-items:center;">
-    <form method="post" action="{% url 'permeability_pdf' %}" style="margin:0;">
-      {% csrf_token %}
-      <!-- 현재 화면 상태를 PDF로 넘기기 위한 hidden -->
-      <input type="hidden" name="smiles" value="{{ smiles_value }}">
-      <input type="hidden" name="fixed_var" value="{{ fixed_var }}">
-      <input type="hidden" name="lec_value" value="{{ lec_value }}">
-      <input type="hidden" name="ph_value" value="{{ ph_value }}">
-      <input type="hidden" name="dmso_value" value="{{ dmso_value }}">
-      <!-- 어떤 화면을 PDF로 만들지 힌트 (원하면 사용) -->
-      <input type="hidden" name="mode" value="current">
-      <button type="submit">PDF 다운로드</button>
-    </form>
-
-    <span style="color:#666; font-size:0.9em;">
-      현재 화면(그래프/박스 포함)을 PDF로 저장합니다.
-    </span>
-  </div>
 
   <!-- ✅ 그래프 생성 폼 (PDF에는 숨김) -->
   {% if not is_pdf %}
@@ -114,14 +94,23 @@
   {% endif %}
 
   <div class="layout">
+    <!-- 왼쪽: 그래프 -->
     <div class="left-panel">
-      {% if plot_html %}
-        {{ plot_html|safe }}
+      {% if not is_pdf %}
+        {% if plot_html %}
+          {{ plot_html|safe }}
+        {% endif %}
+      {% else %}
+        <div style="border:1px solid #ddd; background:#fff; padding:12px; font-size:0.95em; color:#555;">
+          PDF에는 3D 그래프가 정적 이미지로 포함됩니다. (웹에서는 인터랙티브 그래프 표시)
+        </div>
       {% endif %}
     </div>
 
+    <!-- 오른쪽: 박스 -->
     <div class="right-panel">
 
+      <!-- (1) 모델 성능 -->
       <div class="box" style="grid-column: 1; grid-row: 1;">
         <h3>모델 성능</h3>
         {% if model_meta.r2 %}
@@ -134,6 +123,7 @@
         {% endif %}
       </div>
 
+      <!-- (2) RDKit -->
       <div class="box" style="grid-column: 2; grid-row: 1 / span 3;">
         <h3>RDKit 분자 특성</h3>
         {% if rdkit_desc %}
@@ -154,6 +144,7 @@
         {% endif %}
       </div>
 
+      <!-- (3) 변수 민감도 -->
       <div class="box" style="grid-column: 1; grid-row: 2;">
         <h3>변수 민감도 (Local Sensitivity)</h3>
         {% if sensitivity %}
@@ -170,10 +161,11 @@
         {% endif %}
       </div>
 
+      <!-- (4) 단일 조건 예측 -->
       <div class="box" style="grid-column: 1; grid-row: 3;">
         <h3>단일 조건 예측</h3>
 
-        <!-- ✅ 단일조건 폼도 PDF에선 숨김 -->
+        <!-- ✅ 단일조건 폼은 PDF에서는 숨김 -->
         {% if not is_pdf %}
         <form method="post" class="no-print">
           {% csrf_token %}
@@ -204,6 +196,22 @@
           <p style="margin-top:8px;">
             예측 logPe: <b>{{ single_pred|floatformat:3 }}</b>
           </p>
+        {% endif %}
+
+        <!-- ✅ 단일조건 결과가 있을 때만 PDF 버튼 표시 -->
+        {% if single_pred and not is_pdf %}
+          <form method="post" action="{% url 'permeability_pdf' %}" class="no-print" style="margin-top:10px;">
+            {% csrf_token %}
+            <input type="hidden" name="smiles" value="{{ smiles_value }}">
+            <input type="hidden" name="fixed_var" value="{{ fixed_var }}">
+            <input type="hidden" name="lec_value" value="{{ lec_value }}">
+            <input type="hidden" name="ph_value" value="{{ ph_value }}">
+            <input type="hidden" name="dmso_value" value="{{ dmso_value }}">
+            <button type="submit">이 단일조건 결과를 PDF로 저장</button>
+          </form>
+          <div class="no-print" style="margin-top:6px; font-size:0.85em; color:#666;">
+            ※ 단일 조건 예측을 Confirm 한 값 기준으로 PDF가 생성됩니다.
+          </div>
         {% endif %}
       </div>
 

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from .surface_utils import get_model_meta
 
 from .surface_utils import (
     make_plotly_surface_with_slider,

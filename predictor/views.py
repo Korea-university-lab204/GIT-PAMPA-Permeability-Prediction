@@ -1,3 +1,16 @@
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+
+from .surface_utils import (
+    make_plotly_surface_with_slider,
+    compute_local_sensitivity,
+    get_basic_rdkit_descriptors,
+    predict_single,
+    LEC_MIN, LEC_MAX, PH_MIN, PH_MAX, DMSO_MIN, DMSO_MAX,
+)
+
+
 def smiles_3d_view(request):
     plot_html = None
     error = None

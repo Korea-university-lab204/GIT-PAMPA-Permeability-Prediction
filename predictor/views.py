@@ -202,10 +202,6 @@ def _build_context_for_pdf(post_data):
 
 
 def permeability_pdf(request):
-    """
-    HTML의 'PDF 다운로드' 버튼이 POST로 보내는 값을 받아
-    동일 화면을 렌더링한 뒤 PDF로 변환하여 다운로드.
-    """
     if request.method != "POST":
         return HttpResponse("Method Not Allowed", status=405)
 
@@ -225,8 +221,16 @@ def permeability_pdf(request):
             ],
         )
         page = browser.new_page(viewport={"width": 1400, "height": 900})
-        page.set_content(html, wait_until="load")
-        page.wait_for_timeout(300)
+
+        # ✅ 기본 30초 -> 120초로 여유 (PDF는 무거울 수 있음)
+        page.set_default_timeout(120_000)
+
+        # ✅ load 대신 domcontentloaded (가벼움)
+        page.set_content(html, wait_until="domcontentloaded")
+
+        # ✅ 렌더링 여유 (Plotly가 느릴 수 있음)
+        page.wait_for_timeout(1500)
+
         page.emulate_media(media="print")
 
         pdf_bytes = page.pdf(

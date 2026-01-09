@@ -1,38 +1,45 @@
-# 1) 기본 Python 이미지 사용
 FROM python:3.10-slim
 
-# 2) 환경 변수 설정
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=mysite.settings
 
-# 3) 작업 디렉토리
 WORKDIR /app
 
-# 4) Playwright(Chromium) 실행에 필요한 OS 라이브러리 설치
-RUN apt-get update && apt-get install -y \
-    libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-    libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libgbm1 libpango-1.0-0 libpangocairo-1.0-0 libcairo2 libasound2 \
-    libx11-6 libx11-xcb1 libxcb1 libxext6 libxi6 libxtst6 \
+# ✅ Chrome(Plotly/Kaleido용) 실행에 필요한 시스템 라이브러리들
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libdrm2 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxext6 \
+    libxi6 \
+    libglib2.0-0 \
+    ca-certificates \
     fonts-liberation \
- && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# 5) 의존성 파일 복사 및 설치
 COPY requirements.txt .
 
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r requirements.txt && \
+    # ✅ Kaleido가 쓸 Chrome 다운로드/설치 (이게 핵심)
+    plotly_get_chrome
 
-# 6) Playwright Chromium 브라우저 설치 (⭐ 핵심)
-RUN python -m playwright install chromium
-
-# 7) 프로젝트 전체 복사
 COPY . .
 
-# 8) 컨테이너에서 열 포트
-EXPOSE 10000
+EXPOSE 8000
 
-# Render는 PORT 환경변수로 포트를 지정함
 CMD ["sh", "-c", "gunicorn mysite.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 180"]
-
-

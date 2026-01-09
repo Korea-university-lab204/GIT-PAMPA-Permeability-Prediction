@@ -2,11 +2,17 @@ FROM python:3.10-slim
 
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=mysite.settings
+# kaleido가 크롬 위치를 못 찾는 경우 대비
+ENV CHROME_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
-# ✅ Chrome(Plotly/Kaleido용) 실행에 필요한 시스템 라이브러리들
+# ✅ Chromium + 필수 라이브러리 설치
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    chromium-driver \
+    ca-certificates \
+    fonts-liberation \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
@@ -27,19 +33,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 \
     libxi6 \
     libglib2.0-0 \
-    ca-certificates \
-    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    # ✅ Kaleido가 쓸 Chrome 다운로드/설치 (이게 핵심)
-    plotly_get_chrome
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
 EXPOSE 8000
-
 CMD ["sh", "-c", "gunicorn mysite.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 180"]

@@ -478,11 +478,6 @@ def _make_static_3d_png(smiles, fixed_var, lec_value, ph_value, dmso_value, sing
     return buf.getvalue()
 
 def smiles_to_mol_png_b64(smiles: str, size=(520, 260)) -> str:
-    """
-    SMILES -> RDKit 2D 구조 PNG(base64)
-    캔버스 중앙 정렬(치우침 방지)
-    실패 시 "" 반환
-    """
     try:
         import base64
         from rdkit import Chem
@@ -494,21 +489,20 @@ def smiles_to_mol_png_b64(smiles: str, size=(520, 260)) -> str:
 
         w, h = size
         drawer = rdMolDraw2D.MolDraw2DCairo(int(w), int(h))
-
-        # 옵션: 중앙정렬/여백/렌더링 품질
         opts = drawer.drawOptions()
         opts.centerMolecules = True
-        opts.padding = 0.12  # 0~0.2 사이에서 취향 조절 (여백)
-        # opts.fixedBondLength = 25  # 필요하면 고정(선택)
+        opts.padding = 0.04  # ✅ 여백 줄여서 치우침 완화
 
-        rdMolDraw2D.PrepareAndDrawMolecule(drawer, mol)
+        drawer.ClearDrawing()
+        rdMolDraw2D.PrepareMolForDrawing(mol)
+        drawer.DrawMolecule(mol)
         drawer.FinishDrawing()
 
-        png_bytes = drawer.GetDrawingText()  # bytes
+        png_bytes = drawer.GetDrawingText()
         return base64.b64encode(png_bytes).decode("utf-8")
-
     except Exception:
         return ""
+
 
 
 def smiles_to_mol_png_bytes(smiles: str, size=(520, 220)) -> bytes:

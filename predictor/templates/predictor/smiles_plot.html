@@ -203,8 +203,9 @@
 
 /* 상단: 입력 / Confirm / 우측결과 3칸 (스케치 비율로) */
 .big-grid{
-  grid-template-columns: minmax(200px, 1fr) minmax(160px, 220px) minmax(220px, 1fr);
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 240px minmax(220px, 260px) 1fr; /* ✅ 가운데 칸 확보 */
+  gap: 18px;
   align-items: center;
 }
 
@@ -223,9 +224,11 @@
 
 /* Confirm 버튼 크게 */
 .big-mid button{
-  width: 220px;
-  height: 90px;
-  font-size: 22px;
+  width: 220px;        /* 원하는 기본 크기 */
+  max-width: 100%;     /* ✅ 칸 밖으로 절대 못 나감 */
+  height: 72px;
+  border-radius: 999px;
+  font-size: 20px;
 }
 
 /* 우측(예측 + PDF) 영역: 스케치처럼 오른쪽 정렬 & 여유 있게 */
@@ -235,7 +238,10 @@
 }
 
 .pred-row{
+  display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
   width: 100%;
 }
 
@@ -246,8 +252,8 @@
 
 /* 예측값 박스 크게 */
 .readonly-box{
-  max-width: none;
-  width: 180px;
+  max-width: 100%;
+  width: 240px;
   height: 36px;
   font-size: 16px;
 }
@@ -279,12 +285,12 @@
 
 /* RDKit 구조 박스(그림 영역) 크게 */
 .rdkit-figure{
-  height: 230px;
+  height: 210px;
   margin: 14px 0 10px;
 }
 
 .rdkit-figure img{
-  max-height: 210px;
+  max-height: 190px;
 }
 
     /* ✅ 인쇄 시 숨김 */

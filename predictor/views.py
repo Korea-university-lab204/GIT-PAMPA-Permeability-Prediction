@@ -6,6 +6,7 @@ from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
 
 
 from .surface_utils import (
@@ -314,6 +315,8 @@ def permeability_pdf(request):
     story.append(t2)
     story.append(Spacer(1, 10))
 
+    story.append(PageBreak())
+
     # (D) Local sensitivity 테이블
     lec_s = _get(sens, "lec", 0)
     ph_s = _get(sens, "ph", 0)
@@ -333,7 +336,7 @@ def permeability_pdf(request):
         ("FONTSIZE", (0, 0), (-1, -1), 9),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.whitesmoke, colors.white]),
     ]))
-    story.append(Paragraph("Local Sensitivity (around this condition)", styles["Heading3"]))
+    story.append(Paragraph("Local Sensitivity (Around this condition)", styles["Heading3"]))
     story.append(t3)
     story.append(Spacer(1, 10))
 

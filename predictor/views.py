@@ -477,58 +477,63 @@ def _make_static_3d_png(smiles, fixed_var, lec_value, ph_value, dmso_value, sing
     plt.close(fig)  # ✅ 메모리 회수 필수
     return buf.getvalue()
 
-def smiles_to_mol_png_b64(smiles: str, size=(420, 220)) -> str:
+def smiles_to_mol_png_b64(smiles: str, size=(520, 260)) -> str:
     """
-    SMILES -> RDKit 2D 구조 PNG -> base64 string (템플릿에서 바로 <img>로 사용)
+    SMILES -> RDKit 2D 구조 PNG(base64)
+    캔버스 중앙 정렬(치우침 방지)
     실패 시 "" 반환
     """
     try:
+        import base64
         from rdkit import Chem
-        from rdkit.Chem import Draw
         from rdkit.Chem.Draw import rdMolDraw2D
 
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
             return ""
 
-        # 2D 좌표 계산
-        try:
-            Chem.rdDepictor.Compute2DCoords(mol)
-        except Exception:
-            pass
+        w, h = size
+        drawer = rdMolDraw2D.MolDraw2DCairo(int(w), int(h))
 
-        # PIL 이미지로 생성
-        img = Draw.MolToImage(mol, size=size)
-        buf = BytesIO()
-        img.save(buf, format="PNG")
-        png_bytes = buf.getvalue()
+        # 옵션: 중앙정렬/여백/렌더링 품질
+        opts = drawer.drawOptions()
+        opts.centerMolecules = True
+        opts.padding = 0.12  # 0~0.2 사이에서 취향 조절 (여백)
+        # opts.fixedBondLength = 25  # 필요하면 고정(선택)
+
+        rdMolDraw2D.PrepareAndDrawMolecule(drawer, mol)
+        drawer.FinishDrawing()
+
+        png_bytes = drawer.GetDrawingText()  # bytes
         return base64.b64encode(png_bytes).decode("utf-8")
+
     except Exception:
         return ""
 
+
 def smiles_to_mol_png_bytes(smiles: str, size=(520, 220)) -> bytes:
     """
-    SMILES -> RDKit 2D 구조 PNG -> bytes (PDF용)
+    SMILES -> RDKit 2D 구조 PNG(bytes) (PDF용)
+    캔버스 중앙 정렬(치우침 방지)
     실패 시 b"" 반환
     """
     try:
         from rdkit import Chem
-        from rdkit.Chem import Draw
+        from rdkit.Chem.Draw import rdMolDraw2D
 
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
             return b""
 
-        # 2D 좌표 계산
-        try:
-            Chem.rdDepictor.Compute2DCoords(mol)
-        except Exception:
-            pass
+        w, h = size
+        drawer = rdMolDraw2D.MolDraw2DCairo(int(w), int(h))
+        opts = drawer.drawOptions()
+        opts.centerMolecules = True
+        opts.padding = 0.12
 
-        img = Draw.MolToImage(mol, size=size)
-        buf = BytesIO()
-        img.save(buf, format="PNG")
-        return buf.getvalue()
+        rdMolDraw2D.PrepareAndDrawMolecule(drawer, mol)
+        drawer.FinishDrawing()
+        return drawer.GetDrawingText()
 
     except Exception:
         return b""

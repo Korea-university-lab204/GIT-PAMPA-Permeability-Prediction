@@ -30,6 +30,7 @@
        Right panel layout (NEW)
        =============================== */
     .right-panel{
+      max-width: 520px;   /* ✅ 오른쪽 패널 최대 폭 제한 */
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -45,34 +46,34 @@
     }
 
     .box h3{
-      margin: 0 0 12px 0;
-      font-size: 22px;
+      margin: 0 0 10px 0;
+      font-size: 18px;
       font-weight: 800;
     }
 
     .error{ color: red; margin-top: 8px; }
 
     /* (A) 상단 큰 박스 */
-    .big-box{ min-height: 240px; }
+    .big-box{ min-height: 190px; }
 
     .big-grid{
       display: grid;
-      grid-template-columns: 280px 220px 1fr; /* 좌 / 중 / 우 */
-      gap: 18px;
+      grid-template-columns: 210px 140px 1fr; /* 좌 / 중 / 우 */
+      gap: 12px;
       align-items: center;
     }
 
     .big-left label{
       display: block;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 800;
-      margin: 10px 0 6px;
+      margin: 8px 0 5px;
     }
 
     .big-left input{
-      width: 210px;
-      height: 34px;
-      font-size: 15px;
+      width: 170px;
+      height: 30px;
+      font-size: 14px;
       padding: 4px 8px;
       border: 2px solid #2b4a5b;
       border-radius: 3px;
@@ -86,12 +87,12 @@
     }
 
     .big-mid button{
-      width: 180px;
-      height: 72px;
+      width: 130px;
+      height: 56px;
       border-radius: 999px;
       border: 2px solid #2b4a5b;
       background: #fff;
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 700;
     }
 
@@ -109,36 +110,36 @@
     }
 
     .pred-label{
-      font-size: 22px;
+      font-size: 16px;
       font-weight: 900;
       white-space: nowrap; /* 줄바꿈 방지 */
     }
 
     .readonly-box{
-      width: 220px;
-      height: 34px;
+      width: 170px;
+      height: 30px;
       border: 2px solid #2b4a5b;
       background: #fff;
-      font-size: 16px;
+      font-size: 14px;
       padding: 4px 8px;
       box-sizing: border-box;
     }
 
     .pdf-btn{
-      width: 240px;
-      height: 64px;
+      width: 170px;
+      height: 48px;
       border-radius: 16px;
       border: 2px solid #2b4a5b;
       background: #fff;
-      font-size: 18px;
+      font-size: 15px;
       font-weight: 700;
     }
 
     /* (B) 아래 2열 */
     .bottom-grid{
       display: grid;
-      grid-template-columns: 360px 1fr; /* 왼쪽 스택 폭 고정 */
-      gap: 18px;
+      grid-template-columns: 240px 1fr; /* 왼쪽 스택 폭 고정 */
+      gap: 12px;
       align-items: start;
     }
 
@@ -148,11 +149,11 @@
       gap: 18px;
     }
 
-    .stack .box{ min-height: 170px; } /* 모델 성능/민감도 높이 통일 */
+    .stack .box{ min-height: 150px; } /* 모델 성능/민감도 높이 통일 */
 
     .box p{
-      margin: 8px 0;
-      font-size: 16px;
+      margin: 6px 0;
+      font-size: 14px;
     }
 
     /* RDKit */

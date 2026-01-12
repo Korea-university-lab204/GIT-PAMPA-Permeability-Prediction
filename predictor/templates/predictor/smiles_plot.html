@@ -186,6 +186,107 @@
       margin: 0 0 10px 0;
     }
 
+/* 오른쪽 패널이 너무 좁아지지 않게 */
+.right-panel{
+  min-width: 640px;
+  max-width: 740px;
+}
+
+/* 박스 타이틀을 스케치처럼 더 크게 */
+.box h3{
+  font-size: 22px;
+  margin: 0 0 14px 0;
+}
+
+/* 상단 big-box 크게 */
+.big-box{ min-height: 260px; }
+
+/* 상단: 입력 / Confirm / 우측결과 3칸 (스케치 비율로) */
+.big-grid{
+  grid-template-columns: 280px 260px 1fr;
+  gap: 22px;
+  align-items: center;
+}
+
+/* 입력칸을 스케치처럼 크게 */
+.big-left label{
+  font-size: 18px;
+  margin: 14px 0 10px;
+}
+
+.big-left input{
+  width: 240px;
+  height: 40px;
+  font-size: 16px;
+  padding: 6px 10px;
+}
+
+/* Confirm 버튼 크게 */
+.big-mid button{
+  width: 220px;
+  height: 90px;
+  font-size: 22px;
+}
+
+/* 우측(예측 + PDF) 영역: 스케치처럼 오른쪽 정렬 & 여유 있게 */
+.big-right{
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.pred-row{
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.pred-label{
+  font-size: 22px;
+  font-weight: 900;
+}
+
+/* 예측값 박스 크게 */
+.readonly-box{
+  max-width: none;
+  width: 260px;
+  height: 40px;
+  font-size: 18px;
+}
+
+/* PDF 버튼 크게 */
+.pdf-btn{
+  width: 300px;
+  height: 86px;
+  font-size: 22px;
+  border-radius: 22px;
+}
+
+/* ===== 하단 영역: 왼쪽(작게) + RDKit(크게) ===== */
+.bottom-grid{
+  grid-template-columns: 320px 1fr; /* 왼쪽 폭 고정, RDKit 넓게 */
+  gap: 22px;
+}
+
+/* 왼쪽 스택 박스 높이 스케치처럼 */
+.stack .box{
+  min-height: 220px;
+}
+
+/* 하단 텍스트도 조금 키우기 */
+.box p{
+  font-size: 16px;
+  margin: 8px 0;
+}
+
+/* RDKit 구조 박스(그림 영역) 크게 */
+.rdkit-figure{
+  height: 300px;
+  margin: 14px 0 10px;
+}
+
+.rdkit-figure img{
+  max-height: 280px;
+}
+
     /* ✅ 인쇄 시 숨김 */
     @media print{
       .no-print{ display: none !important; }
@@ -271,7 +372,8 @@
 
           <!-- 우측 예측값 + PDF -->
           <div class="big-right">
-              <label class="pred-label">예측 log Pe :</label>
+	<div class="pred-label">
+              <div class="pred-label">예측 log Pe :</div>
               <input class="readonly-box" type="text"
                      value="{% if single_pred %}{{ single_pred|floatformat:3 }}{% endif %}"
                      readonly>

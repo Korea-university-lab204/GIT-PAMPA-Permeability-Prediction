@@ -34,57 +34,117 @@
     .left-panel { flex: 2; }
 
     .right-panel {
+    .right-panel{
       flex: 1;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(280px, 1fr));
-      grid-template-rows: auto auto auto;
+      display: flex;
+      flex-direction: column;
       gap: 16px;
       margin-top: 20px;
+      align-items: stretch;
+    }
+    
+    /* 공통 박스 */
+    .box{
+      border: 1px solid #999;
+      background: #fff;
+      padding: 14px 16px;
+    }
+    
+    /* (A) 상단 큰 박스: 단일 조건 예측 */
+    .big-box{
+      width: 100%;
+      min-height: 220px;
+    }
+    
+    /* 상단 큰 박스 내부 3열 레이아웃 */
+    .big-grid{
+      display: grid;
+      grid-template-columns: 1fr 200px 1fr; /* 좌(입력) / 중(Confirm) / 우(결과) */
+      gap: 18px;
+      align-items: center;
+    }
+    
+    .big-left label{
+      display: block;
+      font-weight: 700;
+      margin: 8px 0 6px;
+    }
+    
+    .big-left input{
+      width: 180px;
+      height: 28px;
+      border: 2px solid #2b4a5b;
+    }
+    
+    .big-mid{
+      display: flex;
+      justify-content: center;
+    }
+    
+    .big-mid button{
+      width: 160px;
+      height: 70px;
+      border-radius: 999px;
+      border: 2px solid #2b4a5b;
+      background: #fff;
+      font-size: 18px;
+    }
+    
+    .big-right{
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px 12px;
+      align-items: center;
+      justify-content: end;
+    }
+    
+    .big-right .pred-label{
+      font-weight: 800;
+      font-size: 20px;
+    }
+    
+    .big-right input.readonly-box{
+      width: 180px;
+      height: 30px;
+      border: 2px solid #2b4a5b;
+      background: #fff;
+    }
+
+    .big-right .pdf-btn{
+      grid-column: 1 / -1;
+      justify-self: end;
+      margin-top: 10px;
+      width: 220px;
+      height: 60px;
+      border-radius: 16px;
+      border: 2px solid #2b4a5b;
+      background: #fff;
+      font-size: 16px;
+    }
+
+    /* (B) 아래 2열 영역 */
+    .bottom-grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
       align-items: start;
     }
 
-    .box {
-      border: 1px solid #ccc;
-      background: #fafafa;
-      padding: 10px 14px;
-    }
-
-    .box h3 { margin: 0 0 8px 0; }
-
-    .error {
-      color: red;
-      margin-top: 8px;
-    }
-
-    /* ===============================
-       Molecule structure (2D)
-       =============================== */
-    .mol-figure{
-      width: 100%;
+    /* 아래 왼쪽(모델성능 + 민감도) 세로 */
+    .stack{
       display: flex;
       flex-direction: column;
+      gap: 16px;
+    }
+
+    /* RDKit 큰 박스 내부 */
+    .rdkit-figure{
+      border: 2px solid #2b4a5b;
+      height: 220px;
+      display: flex;
       align-items: center;
       justify-content: center;
-      margin: 8px 0 12px 0;
-    }
-
-    .mol-img{
-      display: block;
-      margin: 0 auto;
-      max-width: 100%;
-      height: auto;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 6px;
-      background: #fff;
-      float: none !important;
-    }
-
-    .mol-caption{
-      font-size: 0.85em;
-      color: #666;
-      text-align: center;
-      margin-top: 4px;
+      margin: 10px 0;
     }
 
     /* ✅ 인쇄 시 숨김 */
@@ -141,124 +201,134 @@
     </div>
 
     <!-- 오른쪽: 박스 -->
+    <!-- 오른쪽: 박스 -->
     <div class="right-panel">
-
-      <!-- (1) 모델 성능 -->
-      <div class="box" style="grid-column: 1; grid-row: 1;">
-        <h3>모델 성능</h3>
-        {% if model_meta.r2 %}
-          <p>R²: {{ model_meta.r2|floatformat:4 }}</p>
-          <p>RMSE: {{ model_meta.rmse|floatformat:4 }}</p>
-          <p>MAE: {{ model_meta.mae|floatformat:4 }}</p>
-          <p>MAPE: {{ model_meta.mape|floatformat:4 }}%</p>
-        {% else %}
-          <p>모델 성능 정보를 불러오지 못했습니다.</p>
-        {% endif %}
-      </div>
-
-      <!-- (2) RDKit -->
-      <div class="box" style="grid-column: 2; grid-row: 1 / span 3;">
-        <h3>RDKit 분자 특성</h3>
-      
-        {% if mol_png_b64 %}
-          <div class="mol-figure">
-            <img class="mol-img"
-                 src="data:image/png;base64,{{ mol_png_b64 }}"
-                 alt="Molecule structure">
-            <div class="mol-caption">2D molecular structure (RDKit)</div>
-          </div>
-        {% endif %}
-      
-        {% if rdkit_desc %}
-          <ul>
-            <li>분자량 (MolWt): <b>{{ rdkit_desc.MolWt|floatformat:2 }}</b></li>
-            <li>logP: <b>{{ rdkit_desc.LogP|floatformat:2 }}</b></li>
-            <li>극성 표면적 (TPSA): <b>{{ rdkit_desc.TPSA|floatformat:2 }}</b> Å²</li>
-            <li>H-bond Donors (HBD): <b>{{ rdkit_desc.HBD }}</b></li>
-            <li>H-bond Acceptors (HBA): <b>{{ rdkit_desc.HBA }}</b></li>
-            <li>회전 가능한 결합: <b>{{ rdkit_desc.RotatableBonds }}</b></li>
-            <li>Ring 수 (RingCount): <b>{{ rdkit_desc.RingCount }}</b></li>
-            <li>Heavy Atom 수: <b>{{ rdkit_desc.HeavyAtomCount }}</b></li>
-          </ul>
-        {% else %}
-          <div style="font-size: 0.90em; color: #666;">
-            그래프 생성 후 표시됩니다.
-          </div>
-        {% endif %}
-      </div>
-
-      <!-- (3) 변수 민감도 -->
-      <div class="box" style="grid-column: 1; grid-row: 2;">
-        <h3>변수 민감도 (Local Sensitivity)</h3>
-        {% if sensitivity %}
-          <p>각 변수 변화 시 ΔlogPe:</p>
-          <ul>
-            <li>Lec (+1): <b>{{ sensitivity.lec|floatformat:3 }}</b></li>
-            <li>pH (+0.1): <b>{{ sensitivity.ph|floatformat:3 }}</b></li>
-            <li>DMSO (+1): <b>{{ sensitivity.dmso|floatformat:3 }}</b></li>
-          </ul>
-        {% else %}
-          <div style="font-size: 0.90em; color: #666;">
-            그래프 생성 후 표시됩니다.
-          </div>
-        {% endif %}
-      </div>
-
-      <!-- (4) 단일 조건 예측 -->
-      <div class="box" style="grid-column: 1; grid-row: 3;">
+    
+      <!-- (A) 상단 큰 박스: 단일 조건 예측 -->
+      <div class="box big-box">
         <h3>단일 조건 예측</h3>
 
-        <!-- ✅ 단일조건 폼은 PDF에서는 숨김 -->
-        {% if not is_pdf %}
-        <form method="post" class="no-print">
-          {% csrf_token %}
-          <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
-          <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">
+        <div class="big-grid">
 
-          <p>
-            Lecithin(%):
-            <input type="number" name="lec_value" step="0.5"
-                   value="{{ lec_value|floatformat:2 }}">
-          </p>
-          <p>
-            pH:
-            <input type="number" name="ph_value" step="0.1"
-                   value="{{ ph_value|floatformat:2 }}">
-          </p>
-          <p>
-            DMSO(%):
-            <input type="number" name="dmso_value" step="0.5"
-                   value="{{ dmso_value|floatformat:2 }}">
-          </p>
-
-          <button type="submit" name="single_predict">Confirm</button>
-        </form>
-        {% endif %}
-
-        {% if single_pred %}
-          <p style="margin-top:8px;">
-            예측 logPe: <b>{{ single_pred|floatformat:3 }}</b>
-          </p>
-        {% endif %}
-
-        <!-- ✅ 단일조건 결과가 있을 때만 PDF 버튼 표시 -->
-        {% if single_pred and not is_pdf %}
-          <form method="post" action="{% url 'permeability_pdf' %}" class="no-print" style="margin-top:10px;">
-            {% csrf_token %}
-            <input type="hidden" name="smiles" value="{{ smiles_value }}">
-            <input type="hidden" name="fixed_var" value="{{ fixed_var }}">
-            <input type="hidden" name="lec_value" value="{{ lec_value }}">
-            <input type="hidden" name="ph_value" value="{{ ph_value }}">
-            <input type="hidden" name="dmso_value" value="{{ dmso_value }}">
-            <button type="submit">이 단일조건 결과를 PDF로 저장</button>
-          </form>
-          <div class="no-print" style="margin-top:6px; font-size:0.85em; color:#666;">
-            ※ 단일 조건 예측을 Confirm 한 값 기준으로 PDF가 생성됩니다.
+          <!-- 좌측: 입력 3개 -->
+          <div class="big-left">
+            {% if not is_pdf %}
+            <form method="post" class="no-print">
+              {% csrf_token %}
+              <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
+              <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">
+    
+              <label>-Lecithin (%) :</label>
+              <input type="number" name="lec_value" step="0.5" value="{{ lec_value|floatformat:2 }}">
+    
+              <label>-pH :</label>
+              <input type="number" name="ph_value" step="0.1" value="{{ ph_value|floatformat:2 }}">
+    
+              <label>-DMSO (%) :</label>
+              <input type="number" name="dmso_value" step="0.5" value="{{ dmso_value|floatformat:2 }}">
+    
+              <!-- 가운데 Confirm 버튼은 같은 form 안에 있어야 submit 됨 -->
+               <div class="big-mid">
+                 <button type="submit" name="single_predict">Confirm</button>
+              </div>
+            </form>
+            {% endif %}
           </div>
-        {% endif %}
+
+          <!-- 중간: Confirm 버튼 자리(모바일/비포스트 대비용) -->
+          {% if is_pdf %}
+          <div class="big-mid">
+            <button disabled>Confirm</button>
+          </div>
+          {% endif %}
+    
+          <!-- 우측: 예측값 + PDF 버튼 -->
+          <div class="big-right">
+            <div class="pred-label">예측 log Pe :</div>
+    
+            <input class="readonly-box" type="text"
+                   value="{% if single_pred %}{{ single_pred|floatformat:3 }}{% endif %}"
+                   readonly>
+    
+            {% if single_pred and not is_pdf %}
+              <form method="post" action="{% url 'permeability_pdf' %}" class="no-print" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="smiles" value="{{ smiles_value }}">
+                <input type="hidden" name="fixed_var" value="{{ fixed_var }}">
+                <input type="hidden" name="lec_value" value="{{ lec_value }}">
+                <input type="hidden" name="ph_value" value="{{ ph_value }}">
+                <input type="hidden" name="dmso_value" value="{{ dmso_value }}">
+                <button class="pdf-btn" type="submit">결과 pdf 인쇄</button>
+              </form>
+            {% endif %}
+          </div>
+    
+        </div>
       </div>
 
+      <!-- (B) 아래 2열 -->
+      <div class="bottom-grid">
+
+        <!-- 왼쪽: 모델성능 + 민감도 -->
+        <div class="stack">
+    
+          <div class="box">
+            <h3>모델 성능</h3>
+            {% if model_meta.r2 %}
+              <p>-R² : {{ model_meta.r2|floatformat:4 }}</p>
+              <p>-RMSE : {{ model_meta.rmse|floatformat:4 }}</p>
+              <p>-MAE : {{ model_meta.mae|floatformat:4 }}</p>
+              <p>-MAPE : {{ model_meta.mape|floatformat:4 }}%</p>
+            {% else %}
+              <p>모델 성능 정보를 불러오지 못했습니다.</p>
+            {% endif %}
+          </div>
+
+          <div class="box">
+            <h3>변수 민감도 (Local Sensitivity)</h3>
+            {% if sensitivity %}
+              <p>*변수 변화 시 ΔlogPe:</p>
+              <p>-Lec (+1) : <b>{{ sensitivity.lec|floatformat:3 }}</b></p>
+              <p>-pH (0.1) : <b>{{ sensitivity.ph|floatformat:3 }}</b></p>
+              <p>-DMSO (+1) : <b>{{ sensitivity.dmso|floatformat:3 }}</b></p>
+            {% else %}
+              <div style="font-size: 0.90em; color: #666;">그래프 생성 후 표시됩니다.</div>
+            {% endif %}    
+          </div>
+
+        </div>
+
+        <!-- 오른쪽: RDKit + 구조 -->
+        <div class="box">
+          <h3>RDKit 분자 특성</h3>
+    
+          <div class="rdkit-figure">
+            {% if mol_png_b64 %}
+              <img src="data:image/png;base64,{{ mol_png_b64 }}" style="max-width:100%; height:auto;" alt="Molecule structure">
+            {% else %}
+              <div style="color:#666;">Molecular structure</div>
+            {% endif %}
+          </div>
+
+          <div style="font-size:0.85em; color:#666; text-align:center; margin-top:-6px;">
+            -2D molecular structure (RDKit)
+          </div>
+
+          {% if rdkit_desc %}
+            <p>-분자량 : {{ rdkit_desc.MolWt|floatformat:2 }}</p>
+            <p>-log P : {{ rdkit_desc.LogP|floatformat:2 }}</p>
+            <p>-TPSA : {{ rdkit_desc.TPSA|floatformat:2 }} Å²</p>
+            <p>-HBD : {{ rdkit_desc.HBD }}</p>
+            <p>-HBA : {{ rdkit_desc.HBA }}</p>
+            <p>-Ring count : {{ rdkit_desc.RingCount }}</p>
+            <p>-Heavy Atom : {{ rdkit_desc.HeavyAtomCount }}</p>
+          {% else %}
+            <div style="font-size: 0.90em; color: #666;">그래프 생성 후 표시됩니다.</div>
+          {% endif %}
+        </div>
+
+      </div>
     </div>
-  </div>
+
 </body>
 </html>

@@ -30,8 +30,9 @@
        Right panel layout (NEW)
        =============================== */
     .right-panel{
-      max-width: 520px;   /* ✅ 오른쪽 패널 최대 폭 제한 */
       flex: 1;
+      min-width: 460px;
+      max-width: 620px;
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -43,6 +44,7 @@
       border: 1.5px solid #7c7c7c;
       background: #fff;
       padding: 16px 18px;
+      overflow: hidden;
     }
 
     .box h3{
@@ -117,8 +119,8 @@
     }
 
     .readonly-box{
-      width: 210px;
-      max-width: 100%;
+      width: 100%;
+      max-width: 220px;
       height: 30px;
       border: 2px solid #2b4a5b;
       background: #fff;
@@ -142,7 +144,7 @@
     /* (B) 아래 2열 */
     .bottom-grid{
       display: grid;
-      grid-template-columns: 240px 1fr; /* 왼쪽 스택 폭 고정 */
+      grid-template-columns: mixmax(220px, 0.9fr) minmax(260px, 1.1fr);
       gap: 12px;
       align-items: start;
     }
@@ -158,6 +160,8 @@
     .box p{
       margin: 6px 0;
       font-size: 14px;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
     }
 
     /* RDKit */

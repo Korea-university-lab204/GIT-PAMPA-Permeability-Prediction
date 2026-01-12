@@ -126,14 +126,29 @@
       <!-- (2) RDKit -->
       <div class="box" style="grid-column: 2; grid-row: 1 / span 3;">
         <h3>RDKit 분자 특성</h3>
-        {% if mol_png_b64 %}
-          <div style="margin: 8px 0 12px 0; text-align: center;">
+           {% if mol_png_b64 %}
+          <div style="margin: 8px 0 12px 0;">
             <img src="data:image/png;base64,{{ mol_png_b64 }}"
                  alt="Molecule structure"
-                 style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 6px; padding: 6px; background: #fff;">
-          </div>
-        {% endif %}
-        {% if rdkit_desc %}
+                 style="
+                   display: block;
+                   margin: 0 auto;
+                   max-width: 100%;
+                   height: auto;
+                   border: 1px solid #ddd;
+                   border-radius: 6px;
+                   padding: 6px;
+                   background: #fff;
+                 ">
+
+
+                <!-- ✅ 이미지 바로 아래 캡션 -->
+          <p style="font-size:0.85em; color:#666; text-align:center; margin-top:4px;">
+              2D molecular structure (RDKit)
+          </p>
+      </div>
+      {% endif %}
+              {% if rdkit_desc %}
           <ul>
             <li>분자량 (MolWt): <b>{{ rdkit_desc.MolWt|floatformat:2 }}</b></li>
             <li>logP: <b>{{ rdkit_desc.LogP|floatformat:2 }}</b></li>

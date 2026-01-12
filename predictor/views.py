@@ -297,6 +297,18 @@ def permeability_pdf(request):
     story.append(t1)
     story.append(Spacer(1, 10))
 
+    # ✅ Molecule structure (2D) - PDF에 삽입
+    mol_png = smiles_to_mol_png_bytes(smiles_value, size=(520, 220))
+    if mol_png:
+        story.append(Paragraph("Molecule Structure (2D)", styles["Heading3"]))
+        story.append(Image(BytesIO(mol_png), width=520, height=220))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("2D molecular structure (RDKit)", styles["Normal"]))
+        story.append(Spacer(1, 10))
+    else:
+        story.append(Paragraph("Molecule Structure (2D): invalid SMILES", styles["Normal"]))
+        story.append(Spacer(1, 10))
+
     # (B) 3D 그래프 이미지 삽입 (고정변수=단일조건 값)
     story.append(Paragraph("3D Surface (static, fixed at current condition)", styles["Heading3"]))
     img = Image(BytesIO(graph_png), width=520, height=330)  # A4 폭 고려
@@ -493,3 +505,30 @@ def smiles_to_mol_png_b64(smiles: str, size=(420, 220)) -> str:
         return base64.b64encode(png_bytes).decode("utf-8")
     except Exception:
         return ""
+
+def smiles_to_mol_png_bytes(smiles: str, size=(520, 220)) -> bytes:
+    """
+    SMILES -> RDKit 2D 구조 PNG -> bytes (PDF용)
+    실패 시 b"" 반환
+    """
+    try:
+        from rdkit import Chem
+        from rdkit.Chem import Draw
+
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            return b""
+
+        # 2D 좌표 계산
+        try:
+            Chem.rdDepictor.Compute2DCoords(mol)
+        except Exception:
+            pass
+
+        img = Draw.MolToImage(mol, size=size)
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
+
+    except Exception:
+        return b""

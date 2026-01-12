@@ -315,6 +315,8 @@ def permeability_pdf(request):
     story.append(img)
     story.append(Spacer(1, 10))
 
+    story.append(PageBreak())
+
     # (C) Model performance (소수점 4자리)
     t2_data = [
         ["Metric", "Value"],
@@ -334,8 +336,6 @@ def permeability_pdf(request):
     story.append(Paragraph("Model Performance", styles["Heading3"]))
     story.append(t2)
     story.append(Spacer(1, 10))
-
-    story.append(PageBreak())
 
     # (D) Local sensitivity 테이블
     lec_s = _get(sens, "lec", 0)
@@ -505,7 +505,7 @@ def smiles_to_mol_png_b64(smiles: str, size=(520, 260)) -> str:
 
 
 
-def smiles_to_mol_png_bytes(smiles: str, size=(520, 220)) -> bytes:
+def smiles_to_mol_png_bytes(smiles: str, size=(260, 110)) -> bytes:
     """
     SMILES -> RDKit 2D 구조 PNG(bytes) (PDF용)
     캔버스 중앙 정렬(치우침 방지)

@@ -6,150 +6,180 @@
   <title>Permeability 3D Tool</title>
 
   <style>
-    body {
+    body{
       font-family: Arial, sans-serif;
       max-width: 1400px;
       margin: 20px auto;
     }
-  
-    input[type="text"], input[type="number"] {
-      padding: 5px;
-    }
 
-    input[type="text"] {
-      width: 360px;
-    }
+    input[type="text"], input[type="number"]{ padding: 5px; }
+    input[type="text"]{ width: 360px; }
 
-    button {
-      padding: 6px 12px;
-    }
+    button{ padding: 6px 12px; cursor: pointer; }
 
-    .layout {
+    .layout{
       display: flex;
       gap: 20px;
       margin-top: 20px;
       align-items: flex-start;
     }
 
-    .left-panel { flex: 2; }
+    .left-panel{ flex: 2; }
 
-    .right-panel {
+    /* ===============================
+       Right panel layout (NEW)
+       =============================== */
     .right-panel{
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
       margin-top: 20px;
       align-items: stretch;
     }
-    
-    /* 공통 박스 */
+
     .box{
-      border: 1px solid #999;
+      border: 1.5px solid #7c7c7c;
       background: #fff;
-      padding: 14px 16px;
+      padding: 16px 18px;
     }
-    
-    /* (A) 상단 큰 박스: 단일 조건 예측 */
-    .big-box{
-      width: 100%;
-      min-height: 220px;
+
+    .box h3{
+      margin: 0 0 12px 0;
+      font-size: 22px;
+      font-weight: 800;
     }
-    
-    /* 상단 큰 박스 내부 3열 레이아웃 */
+
+    .error{ color: red; margin-top: 8px; }
+
+    /* (A) 상단 큰 박스 */
+    .big-box{ min-height: 240px; }
+
     .big-grid{
       display: grid;
-      grid-template-columns: 1fr 200px 1fr; /* 좌(입력) / 중(Confirm) / 우(결과) */
+      grid-template-columns: 280px 220px 1fr; /* 좌 / 중 / 우 */
       gap: 18px;
       align-items: center;
     }
-    
+
     .big-left label{
       display: block;
-      font-weight: 700;
-      margin: 8px 0 6px;
+      font-size: 16px;
+      font-weight: 800;
+      margin: 10px 0 6px;
     }
-    
+
     .big-left input{
-      width: 180px;
-      height: 28px;
+      width: 210px;
+      height: 34px;
+      font-size: 15px;
+      padding: 4px 8px;
       border: 2px solid #2b4a5b;
+      border-radius: 3px;
+      box-sizing: border-box;
     }
-    
+
     .big-mid{
       display: flex;
       justify-content: center;
+      align-items: center;
     }
-    
+
     .big-mid button{
-      width: 160px;
-      height: 70px;
+      width: 180px;
+      height: 72px;
       border-radius: 999px;
       border: 2px solid #2b4a5b;
       background: #fff;
-      font-size: 18px;
-    }
-    
-    .big-right{
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 10px 12px;
-      align-items: center;
-      justify-content: end;
-    }
-    
-    .big-right .pred-label{
-      font-weight: 800;
       font-size: 20px;
-    }
-    
-    .big-right input.readonly-box{
-      width: 180px;
-      height: 30px;
-      border: 2px solid #2b4a5b;
-      background: #fff;
+      font-weight: 700;
     }
 
-    .big-right .pdf-btn{
-      grid-column: 1 / -1;
-      justify-self: end;
-      margin-top: 10px;
+    .big-right{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 14px;
+    }
+
+    .pred-row{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pred-label{
+      font-size: 22px;
+      font-weight: 900;
+      white-space: nowrap; /* 줄바꿈 방지 */
+    }
+
+    .readonly-box{
       width: 220px;
-      height: 60px;
-      border-radius: 16px;
+      height: 34px;
       border: 2px solid #2b4a5b;
       background: #fff;
       font-size: 16px;
+      padding: 4px 8px;
+      box-sizing: border-box;
     }
 
-    /* (B) 아래 2열 영역 */
+    .pdf-btn{
+      width: 240px;
+      height: 64px;
+      border-radius: 16px;
+      border: 2px solid #2b4a5b;
+      background: #fff;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* (B) 아래 2열 */
     .bottom-grid{
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      grid-template-columns: 360px 1fr; /* 왼쪽 스택 폭 고정 */
+      gap: 18px;
       align-items: start;
     }
 
-    /* 아래 왼쪽(모델성능 + 민감도) 세로 */
     .stack{
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
     }
 
-    /* RDKit 큰 박스 내부 */
+    .stack .box{ min-height: 170px; } /* 모델 성능/민감도 높이 통일 */
+
+    .box p{
+      margin: 8px 0;
+      font-size: 16px;
+    }
+
+    /* RDKit */
     .rdkit-figure{
       border: 2px solid #2b4a5b;
-      height: 220px;
+      height: 240px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 10px 0;
+      margin: 12px 0 8px;
+      box-sizing: border-box;
+    }
+    .rdkit-figure img{
+      max-width: 100%;
+      max-height: 220px;
+      height: auto;
+    }
+    .small-caption{
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin: 0 0 10px 0;
     }
 
     /* ✅ 인쇄 시 숨김 */
-    @media print {
-      .no-print { display: none !important; }
+    @media print{
+      .no-print{ display: none !important; }
     }
   </style>
 </head>
@@ -183,7 +213,7 @@
   {% endif %}
 
   {% if error %}
-  <div class="error">{{ error }}</div>
+    <div class="error">{{ error }}</div>
   {% endif %}
 
   <div class="layout">
@@ -200,78 +230,74 @@
       {% endif %}
     </div>
 
-    <!-- 오른쪽: 박스 -->
-    <!-- 오른쪽: 박스 -->
+    <!-- 오른쪽: 새 레이아웃 -->
     <div class="right-panel">
-    
-      <!-- (A) 상단 큰 박스: 단일 조건 예측 -->
+
+      <!-- (A) 상단 큰 박스 -->
       <div class="box big-box">
         <h3>단일 조건 예측</h3>
 
-        <div class="big-grid">
+        {% if not is_pdf %}
+        <form method="post" class="big-grid no-print">
+          {% csrf_token %}
+          <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
+          <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">
 
-          <!-- 좌측: 입력 3개 -->
+          <!-- 좌측 입력 -->
           <div class="big-left">
-            {% if not is_pdf %}
-            <form method="post" class="no-print">
-              {% csrf_token %}
-              <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
-              <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">
-    
-              <label>-Lecithin (%) :</label>
-              <input type="number" name="lec_value" step="0.5" value="{{ lec_value|floatformat:2 }}">
-    
-              <label>-pH :</label>
-              <input type="number" name="ph_value" step="0.1" value="{{ ph_value|floatformat:2 }}">
-    
-              <label>-DMSO (%) :</label>
-              <input type="number" name="dmso_value" step="0.5" value="{{ dmso_value|floatformat:2 }}">
-    
-              <!-- 가운데 Confirm 버튼은 같은 form 안에 있어야 submit 됨 -->
-               <div class="big-mid">
-                 <button type="submit" name="single_predict">Confirm</button>
-              </div>
-            </form>
-            {% endif %}
+            <label>-Lecithin (%) :</label>
+            <input type="number" name="lec_value" step="0.5" value="{{ lec_value|floatformat:2 }}">
+
+            <label>-pH :</label>
+            <input type="number" name="ph_value" step="0.1" value="{{ ph_value|floatformat:2 }}">
+
+            <label>-DMSO (%) :</label>
+            <input type="number" name="dmso_value" step="0.5" value="{{ dmso_value|floatformat:2 }}">
           </div>
 
-          <!-- 중간: Confirm 버튼 자리(모바일/비포스트 대비용) -->
-          {% if is_pdf %}
+          <!-- 가운데 Confirm -->
           <div class="big-mid">
-            <button disabled>Confirm</button>
+            <button type="submit" name="single_predict">Confirm</button>
           </div>
-          {% endif %}
-    
-          <!-- 우측: 예측값 + PDF 버튼 -->
+
+          <!-- 우측 예측값 + PDF -->
           <div class="big-right">
-            <div class="pred-label">예측 log Pe :</div>
-    
-            <input class="readonly-box" type="text"
-                   value="{% if single_pred %}{{ single_pred|floatformat:3 }}{% endif %}"
-                   readonly>
-    
-            {% if single_pred and not is_pdf %}
-              <form method="post" action="{% url 'permeability_pdf' %}" class="no-print" style="margin:0;">
-                {% csrf_token %}
-                <input type="hidden" name="smiles" value="{{ smiles_value }}">
-                <input type="hidden" name="fixed_var" value="{{ fixed_var }}">
-                <input type="hidden" name="lec_value" value="{{ lec_value }}">
-                <input type="hidden" name="ph_value" value="{{ ph_value }}">
-                <input type="hidden" name="dmso_value" value="{{ dmso_value }}">
-                <button class="pdf-btn" type="submit">결과 pdf 인쇄</button>
-              </form>
+            <div class="pred-row">
+              <div class="pred-label">예측 log Pe :</div>
+              <input class="readonly-box" type="text"
+                     value="{% if single_pred %}{{ single_pred|floatformat:3 }}{% endif %}"
+                     readonly>
+            </div>
+
+            {% if single_pred %}
+              <button class="pdf-btn" type="submit"
+                      formaction="{% url 'permeability_pdf' %}" formmethod="post">
+                결과 pdf 인쇄
+              </button>
             {% endif %}
+
+            <!-- PDF 버튼 눌러도 값 유지 -->
+            <input type="hidden" name="smiles" value="{{ smiles_value }}">
+            <input type="hidden" name="fixed_var" value="{{ fixed_var }}">
+            <input type="hidden" name="lec_value" value="{{ lec_value }}">
+            <input type="hidden" name="ph_value" value="{{ ph_value }}">
+            <input type="hidden" name="dmso_value" value="{{ dmso_value }}">
           </div>
-    
-        </div>
+        </form>
+        {% else %}
+          <div class="big-grid">
+            <div class="big-left"></div>
+            <div class="big-mid"><button disabled>Confirm</button></div>
+            <div class="big-right"></div>
+          </div>
+        {% endif %}
       </div>
 
       <!-- (B) 아래 2열 -->
       <div class="bottom-grid">
 
-        <!-- 왼쪽: 모델성능 + 민감도 -->
+        <!-- 왼쪽 스택 -->
         <div class="stack">
-    
           <div class="box">
             <h3>모델 성능</h3>
             {% if model_meta.r2 %}
@@ -293,26 +319,23 @@
               <p>-DMSO (+1) : <b>{{ sensitivity.dmso|floatformat:3 }}</b></p>
             {% else %}
               <div style="font-size: 0.90em; color: #666;">그래프 생성 후 표시됩니다.</div>
-            {% endif %}    
+            {% endif %}
           </div>
-
         </div>
 
-        <!-- 오른쪽: RDKit + 구조 -->
+        <!-- 오른쪽 RDKit -->
         <div class="box">
           <h3>RDKit 분자 특성</h3>
-    
+
           <div class="rdkit-figure">
             {% if mol_png_b64 %}
-              <img src="data:image/png;base64,{{ mol_png_b64 }}" style="max-width:100%; height:auto;" alt="Molecule structure">
+              <img src="data:image/png;base64,{{ mol_png_b64 }}" alt="Molecule structure">
             {% else %}
               <div style="color:#666;">Molecular structure</div>
             {% endif %}
           </div>
 
-          <div style="font-size:0.85em; color:#666; text-align:center; margin-top:-6px;">
-            -2D molecular structure (RDKit)
-          </div>
+          <div class="small-caption">-2D molecular structure (RDKit)</div>
 
           {% if rdkit_desc %}
             <p>-분자량 : {{ rdkit_desc.MolWt|floatformat:2 }}</p>
@@ -329,6 +352,6 @@
 
       </div>
     </div>
-
+  </div>
 </body>
 </html>

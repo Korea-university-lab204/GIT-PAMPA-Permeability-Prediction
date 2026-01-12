@@ -60,7 +60,7 @@
 
     .big-grid{
       display: grid;
-      grid-template-columns: 210px 140px 1fr; /* 좌 / 중 / 우 */
+      grid-template-columns: 210px 150px minmax(220px, 1fr);
       gap: 12px;
       align-items: center;
     }
@@ -144,7 +144,7 @@
     /* (B) 아래 2열 */
     .bottom-grid{
       display: grid;
-      grid-template-columns: mixmax(220px, 0.9fr) minmax(260px, 1.1fr);
+      grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr);
       gap: 12px;
       align-items: start;
     }

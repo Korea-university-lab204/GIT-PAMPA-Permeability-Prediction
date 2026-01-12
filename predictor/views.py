@@ -529,7 +529,7 @@ def smiles_to_mol_png_bytes(smiles: str, size=(520, 220)) -> bytes:
         drawer = rdMolDraw2D.MolDraw2DCairo(int(w), int(h))
         opts = drawer.drawOptions()
         opts.centerMolecules = True
-        opts.padding = 0.12
+        opts.padding = 0.04
 
         rdMolDraw2D.PrepareAndDrawMolecule(drawer, mol)
         drawer.FinishDrawing()

@@ -99,8 +99,8 @@
     .big-right{
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
-      gap: 14px;
+      align-items: flex-start;
+      gap: 8px;
     }
 
     .pred-row{
@@ -110,13 +110,15 @@
     }
 
     .pred-label{
-      font-size: 16px;
-      font-weight: 900;
+      font-size: 14px;
+      font-weight: 800;
       white-space: nowrap; /* 줄바꿈 방지 */
+      margin-top: 4px;
     }
 
     .readonly-box{
-      width: 170px;
+      width: 210px;
+      max-width: 100%;
       height: 30px;
       border: 2px solid #2b4a5b;
       background: #fff;
@@ -133,6 +135,8 @@
       background: #fff;
       font-size: 15px;
       font-weight: 700;
+      align-self: flex-end;
+      margin-top: 6px;
     }
 
     /* (B) 아래 2열 */
@@ -159,16 +163,16 @@
     /* RDKit */
     .rdkit-figure{
       border: 2px solid #2b4a5b;
-      height: 240px;
+      height: 160px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 12px 0 8px;
+      margin: 10px 0 6px;
       box-sizing: border-box;
     }
     .rdkit-figure img{
       max-width: 100%;
-      max-height: 220px;
+      max-height: 145px;
       height: auto;
     }
     .small-caption{
@@ -263,8 +267,7 @@
 
           <!-- 우측 예측값 + PDF -->
           <div class="big-right">
-            <div class="pred-row">
-              <div class="pred-label">예측 log Pe :</div>
+              <label class="pred-label">예측 log Pe :</label>
               <input class="readonly-box" type="text"
                      value="{% if single_pred %}{{ single_pred|floatformat:3 }}{% endif %}"
                      readonly>

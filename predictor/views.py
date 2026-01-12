@@ -7,6 +7,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+import base64
+from io import BytesIO
 
 
 from .surface_utils import (
@@ -117,6 +119,10 @@ def smiles_3d_view(request):
                     except Exception as e:
                         error = f"오류 발생: {str(e)}"
 
+    mol_png_b64 = ""
+    if smiles_value:
+        mol_png_b64 = smiles_to_mol_png_b64(smiles_value, size=(520, 260))
+
     return render(request, "predictor/smiles_plot.html", {
         "plot_html": plot_html,
         "smiles_value": smiles_value,
@@ -133,6 +139,8 @@ def smiles_3d_view(request):
         "model_meta": model_meta,
         "error": error,
         "is_pdf": False,
+
+        "mol_png_b64": mol_png_b64,
     })
 
 # =========================
@@ -456,3 +464,32 @@ def _make_static_3d_png(smiles, fixed_var, lec_value, ph_value, dmso_value, sing
     fig.savefig(buf, format="png")
     plt.close(fig)  # ✅ 메모리 회수 필수
     return buf.getvalue()
+
+def smiles_to_mol_png_b64(smiles: str, size=(420, 220)) -> str:
+    """
+    SMILES -> RDKit 2D 구조 PNG -> base64 string (템플릿에서 바로 <img>로 사용)
+    실패 시 "" 반환
+    """
+    try:
+        from rdkit import Chem
+        from rdkit.Chem import Draw
+        from rdkit.Chem.Draw import rdMolDraw2D
+
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            return ""
+
+        # 2D 좌표 계산
+        try:
+            Chem.rdDepictor.Compute2DCoords(mol)
+        except Exception:
+            pass
+
+        # PIL 이미지로 생성
+        img = Draw.MolToImage(mol, size=size)
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        png_bytes = buf.getvalue()
+        return base64.b64encode(png_bytes).decode("utf-8")
+    except Exception:
+        return ""

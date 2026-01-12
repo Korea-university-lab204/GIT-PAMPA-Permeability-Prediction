@@ -34,7 +34,7 @@
     .right-panel {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
       grid-template-rows: auto auto auto;
       gap: 16px;
       margin-top: 20px;
@@ -126,6 +126,13 @@
       <!-- (2) RDKit -->
       <div class="box" style="grid-column: 2; grid-row: 1 / span 3;">
         <h3>RDKit 분자 특성</h3>
+        {% if mol_png_b64 %}
+          <div style="margin: 8px 0 12px 0; text-align: center;">
+            <img src="data:image/png;base64,{{ mol_png_b64 }}"
+                 alt="Molecule structure"
+                 style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 6px; padding: 6px; background: #fff;">
+          </div>
+        {% endif %}
         {% if rdkit_desc %}
           <ul>
             <li>분자량 (MolWt): <b>{{ rdkit_desc.MolWt|floatformat:2 }}</b></li>

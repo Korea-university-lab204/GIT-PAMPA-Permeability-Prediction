@@ -69,7 +69,7 @@
   .topbox{
     display: flex;
     gap: 18px;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     flex-wrap: wrap; /* ✅ 핵심: 부족하면 줄바꿈 */
   }
@@ -117,7 +117,7 @@
 
   /* 우측 예측 + PDF */
   .topbox .big-right{
-    flex: 1 1 260px;
+    flex: 1 1 200px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -140,23 +140,23 @@
   }
 
   .topbox .readonly-box{
-    width: 220px;
+    width: 170px;
     max-width: 100%;
-    height: 34px;
+    height: 30px;
     border: 2px solid #2b4a5b;
     background: #fff;
-    font-size: 16px;
+    font-size: 14px;
     padding: 4px 8px;
     box-sizing: border-box;
   }
 
   .topbox .pdf-btn{
-    width: 220px;
-    height: 58px;
+    width: 170px;
+    height: 44px;
     border-radius: 16px;
     border: 2px solid #2b4a5b;
     background: #fff;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 800;
     align-self: flex-end;
     margin-top: 0;

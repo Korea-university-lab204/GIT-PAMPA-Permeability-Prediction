@@ -64,6 +64,7 @@
   .big-box{
     min-height: 220px;
     padding: 16px 18px;
+    overflow: visible; /* ✅ 상단만 */
   }
 
   .topbox{
@@ -76,7 +77,7 @@
 
   /* 좌측 입력 */
   .topbox .big-left{
-    flex: 0 0 240px;
+    flex: 0 0 220px;
   }
 
   .topbox .big-left label{
@@ -87,7 +88,7 @@
   }
 
   .topbox .big-left input{
-    width: 210px;
+    width: 190px;
     height: 34px;
     font-size: 14px;
     padding: 4px 8px;
@@ -98,26 +99,26 @@
 
   /* 가운데 Confirm */
   .topbox .big-mid{
-    flex: 0 0 220px;
+    flex: 0 0 180px;
     display: flex;
     justify-content: center;
     align-items: center;
   }
 
   .topbox .big-mid button{
-    width: 190px;
+    width: 170px;
     max-width: 100%;
-    height: 70px;
+    height: 64px;
     border-radius: 999px;
     border: 2px solid #2b4a5b;
     background: #fff;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
   }
 
   /* 우측 예측 + PDF */
   .topbox .big-right{
-    flex: 1 1 200px;
+    flex: 1 1 180px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -141,7 +142,7 @@
   }
 
   .topbox .readonly-box{
-    width: 170px;
+    width: 160px;
     max-width: 100%;
     height: 30px;
     border: 2px solid #2b4a5b;
@@ -153,7 +154,7 @@
   }
 
   .topbox .pdf-btn{
-    width: 170px;
+    width: 160px;
     height: 44px;
     border-radius: 16px;
     border: 2px solid #2b4a5b;
@@ -184,7 +185,7 @@
 
   .box p{
     margin: 6px 0;
-    font-size: 14px;
+    font-size: 16px;
     word-break: keep-all;
     overflow-wrap: anywhere;
   }

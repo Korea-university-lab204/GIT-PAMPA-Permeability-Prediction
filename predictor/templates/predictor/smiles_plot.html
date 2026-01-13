@@ -353,6 +353,24 @@
     .left-panel{ min-width: 0; }
     .right-panel{ max-width: 100%; min-width: 0; }
   }
+
+/* ---------- KU Logo ---------- */
+.ku-logo-wrap{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ku-logo{
+  height: 52px;        /* ⭐ 기존 KU(38px)보다 확실히 큼 */
+  width: auto;
+  object-fit: contain;
+}
+
+.ku-logo.pharm{
+  height: 48px;        /* 약대 로고는 살짝 작게 */
+}
+
 </style>
 
 </head>
@@ -362,7 +380,14 @@
   <div class="topbar-inner">
     <div class="brand">
       <!-- 로고 이미지가 있으면 여기 img로 바꿔도 됨 -->
-      <div class="mark">KU</div>
+      <div class="ku-logo-wrap">
+  <img src="{% static 'img/ku_logo.png' %}"
+       alt="Korea University"
+       class="ku-logo">
+  <img src="{% static 'img/ku_pharm_logo.png' %}"
+       alt="College of Pharmacy"
+       class="ku-logo pharm">
+</div>
       <div class="titles">
         <div class="title">Git-PAMPA</div>
         <div class="subtitle">Korea University · College of Pharmacy · Permeability Prediction</div>

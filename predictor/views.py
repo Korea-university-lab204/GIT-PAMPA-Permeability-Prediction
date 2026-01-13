@@ -301,7 +301,7 @@ def permeability_pdf(request):
     mol_png = smiles_to_mol_png_bytes(smiles_value, size=(520, 220))
     if mol_png:
         story.append(Paragraph("Molecule Structure (2D)", styles["Heading3"]))
-        story.append(Image(BytesIO(mol_png), width=520, height=220))
+        story.append(Image(BytesIO(mol_png), width=260, height=110))
         story.append(Spacer(1, 6))
         story.append(Paragraph("2D molecular structure (RDKit)", styles["Normal"]))
         story.append(Spacer(1, 10))

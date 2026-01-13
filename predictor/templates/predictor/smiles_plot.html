@@ -5,300 +5,218 @@
   <meta charset="UTF-8" />
   <title>Permeability 3D Tool</title>
 
-  <style>
-    body{
-      font-family: Arial, sans-serif;
-      max-width: 1400px;
-      margin: 20px auto;
-    }
+<style>
+  body{
+    font-family: Arial, sans-serif;
+    max-width: 1400px;
+    margin: 20px auto;
+  }
 
-    input[type="text"], input[type="number"]{ padding: 5px; }
-    input[type="text"]{ width: 360px; }
+  input[type="text"], input[type="number"]{ padding: 5px; }
+  input[type="text"]{ width: 360px; }
 
-    button{ padding: 6px 12px; cursor: pointer; }
+  button{ padding: 6px 12px; cursor: pointer; }
 
-    .layout{
-      display: flex;
-      gap: 20px;
-      margin-top: 20px;
-      align-items: flex-start;
-    }
+  .layout{
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+    align-items: flex-start;
+  }
 
-    .left-panel{ flex: 2; }
+  .left-panel{ flex: 2; }
 
-    /* ===============================
-       Right panel layout (NEW)
-       =============================== */
-    .right-panel{
-      flex: 1;
-      min-width: 460px;
-      max-width: 620px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      margin-top: 20px;
-      align-items: stretch;
-    }
+  /* ===============================
+     Right panel
+     =============================== */
+  .right-panel{
+    flex: 1;
+    min-width: 460px;
+    max-width: 620px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 20px;
+    align-items: stretch;
+  }
 
-    .box{
-      border: 1.5px solid #7c7c7c;
-      background: #fff;
-      padding: 16px 18px;
-      overflow: hidden;
-    }
+  /* 공통 박스 */
+  .box{
+    border: 1.5px solid #7c7c7c;
+    background: #fff;
+    padding: 16px 18px;
+    overflow: hidden;
+  }
 
-    .box h3{
-      margin: 0 0 10px 0;
-      font-size: 18px;
-      font-weight: 800;
-    }
+  .box h3{
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 800;
+  }
 
-    .error{ color: red; margin-top: 8px; }
+  .error{ color: red; margin-top: 8px; }
 
-    /* (A) 상단 큰 박스 */
-    .big-box{ min-height: 190px; }
+  /* ===============================
+     (A) 상단 큰 박스: 단일 조건 예측 (TOP ONLY)
+     - form class="topbox" 기준
+     - 화면/줌 달라도 절대 안 겹치고, 좁으면 아래로 내려감
+     =============================== */
+  .big-box{
+    min-height: 220px;
+    padding: 16px 18px;
+  }
 
-    .big-grid{
-      display: grid;
-      grid-template-columns: 210px 150px minmax(220px, 1fr);
-      gap: 12px;
-      align-items: center;
-    }
+  .topbox{
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; /* ✅ 핵심: 부족하면 줄바꿈 */
+  }
 
-    .big-left label{
-      display: block;
-      font-size: 14px;
-      font-weight: 800;
-      margin: 8px 0 5px;
-    }
+  /* 좌측 입력 */
+  .topbox .big-left{
+    flex: 0 0 240px;
+  }
 
-    .big-left input{
-      width: 170px;
-      height: 30px;
-      font-size: 14px;
-      padding: 4px 8px;
-      border: 2px solid #2b4a5b;
-      border-radius: 3px;
-      box-sizing: border-box;
-    }
+  .topbox .big-left label{
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    margin: 10px 0 6px;
+  }
 
-    .big-mid{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  .topbox .big-left input{
+    width: 210px;
+    height: 34px;
+    font-size: 14px;
+    padding: 4px 8px;
+    border: 2px solid #2b4a5b;
+    border-radius: 3px;
+    box-sizing: border-box;
+  }
 
-    .big-mid button{
-      width: 130px;
-      height: 56px;
-      border-radius: 999px;
-      border: 2px solid #2b4a5b;
-      background: #fff;
-      font-size: 16px;
-      font-weight: 700;
-    }
+  /* 가운데 Confirm */
+  .topbox .big-mid{
+    flex: 0 0 220px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-    .big-right{
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
-    }
+  .topbox .big-mid button{
+    width: 190px;
+    max-width: 100%;
+    height: 70px;
+    border-radius: 999px;
+    border: 2px solid #2b4a5b;
+    background: #fff;
+    font-size: 18px;
+    font-weight: 800;
+  }
 
-    .pred-row{
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+  /* 우측 예측 + PDF */
+  .topbox .big-right{
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
 
-    .pred-label{
-      font-size: 14px;
-      font-weight: 800;
-      white-space: nowrap; /* 줄바꿈 방지 */
-      margin-top: 4px;
-    }
+  .topbox .pred-row{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;
+  }
 
-    .readonly-box{
-      width: 100%;
-      max-width: 220px;
-      height: 30px;
-      border: 2px solid #2b4a5b;
-      background: #fff;
-      font-size: 14px;
-      padding: 4px 8px;
-      box-sizing: border-box;
-    }
+  .topbox .pred-label{
+    font-size: 18px;
+    font-weight: 900;
+    white-space: nowrap;
+    margin-top: 0;
+  }
 
-    .pdf-btn{
-      width: 170px;
-      height: 48px;
-      border-radius: 16px;
-      border: 2px solid #2b4a5b;
-      background: #fff;
-      font-size: 15px;
-      font-weight: 700;
-      align-self: flex-end;
-      margin-top: 6px;
-    }
+  .topbox .readonly-box{
+    width: 220px;
+    max-width: 100%;
+    height: 34px;
+    border: 2px solid #2b4a5b;
+    background: #fff;
+    font-size: 16px;
+    padding: 4px 8px;
+    box-sizing: border-box;
+  }
 
-    /* (B) 아래 2열 */
-    .bottom-grid{
-      display: grid;
-      grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr);
-      gap: 12px;
-      align-items: start;
-    }
+  .topbox .pdf-btn{
+    width: 220px;
+    height: 58px;
+    border-radius: 16px;
+    border: 2px solid #2b4a5b;
+    background: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    align-self: flex-end;
+    margin-top: 0;
+  }
 
-    .stack{
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
+  /* ===============================
+     (B) 아래 2열 (그대로 유지)
+     =============================== */
+  .bottom-grid{
+    display: grid;
+    grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr);
+    gap: 12px;
+    align-items: start;
+  }
 
-    .stack .box{ min-height: 150px; } /* 모델 성능/민감도 높이 통일 */
+  .stack{
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
 
-    .box p{
-      margin: 6px 0;
-      font-size: 14px;
-      word-break: keep-all;
-      overflow-wrap: anywhere;
-    }
+  .stack .box{ min-height: 150px; } /* 모델 성능/민감도 높이 통일 */
 
-    /* RDKit */
-    .rdkit-figure{
-      border: 2px solid #2b4a5b;
-      height: 160px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 10px 0 6px;
-      box-sizing: border-box;
-    }
-    .rdkit-figure img{
-      max-width: 100%;
-      max-height: 145px;
-      height: auto;
-    }
-    .small-caption{
-      font-size: 14px;
-      color: #666;
-      text-align: center;
-      margin: 0 0 10px 0;
-    }
+  .box p{
+    margin: 6px 0;
+    font-size: 14px;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
 
-/* 오른쪽 패널이 너무 좁아지지 않게 */
-.right-panel{
-  min-width: 640px;
-  max-width: 740px;
-}
+  /* RDKit (그대로 유지) */
+  .rdkit-figure{
+    border: 2px solid #2b4a5b;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0 6px;
+    box-sizing: border-box;
+  }
 
-/* 박스 타이틀을 스케치처럼 더 크게 */
-.box h3{
-  font-size: 22px;
-  margin: 0 0 14px 0;
-}
+  .rdkit-figure img{
+    max-width: 100%;
+    max-height: 145px;
+    height: auto;
+  }
 
-/* 상단 big-box 크게 */
-.big-box{ min-height: 260px; }
+  .small-caption{
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    margin: 0 0 10px 0;
+  }
 
-/* 상단: 입력 / Confirm / 우측결과 3칸 (스케치 비율로) */
-.big-grid{
-  display: grid;
-  grid-template-columns: 240px minmax(220px, 260px) 1fr; /* ✅ 가운데 칸 확보 */
-  gap: 18px;
-  align-items: center;
-}
+  /* ✅ 인쇄 시 숨김 */
+  @media print{
+    .no-print{ display: none !important; }
+  }
+</style>
 
-/* 입력칸을 스케치처럼 크게 */
-.big-left label{
-  font-size: 18px;
-  margin: 14px 0 10px;
-}
-
-.big-left input{
-  width: 240px;
-  height: 40px;
-  font-size: 16px;
-  padding: 6px 10px;
-}
-
-/* Confirm 버튼 크게 */
-.big-mid button{
-  width: 220px;        /* 원하는 기본 크기 */
-  max-width: 100%;     /* ✅ 칸 밖으로 절대 못 나감 */
-  height: 72px;
-  border-radius: 999px;
-  font-size: 20px;
-}
-
-/* 우측(예측 + PDF) 영역: 스케치처럼 오른쪽 정렬 & 여유 있게 */
-.big-right{
-  align-items: flex-end;
-  gap: 14px;
-}
-
-.pred-row{
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.pred-label{
-  font-size: 22px;
-  font-weight: 900;
-}
-
-/* 예측값 박스 크게 */
-.readonly-box{
-  max-width: 100%;
-  width: 240px;
-  height: 36px;
-  font-size: 16px;
-}
-
-/* PDF 버튼 크게 */
-.pdf-btn{
-  width: 300px;
-  height: 86px;
-  font-size: 22px;
-  border-radius: 22px;
-}
-
-/* ===== 하단 영역: 왼쪽(작게) + RDKit(크게) ===== */
-.bottom-grid{
-  grid-template-columns: 320px 1fr; /* 왼쪽 폭 고정, RDKit 넓게 */
-  gap: 22px;
-}
-
-/* 왼쪽 스택 박스 높이 스케치처럼 */
-.stack .box{
-  min-height: 220px;
-}
-
-/* 하단 텍스트도 조금 키우기 */
-.box p{
-  font-size: 16px;
-  margin: 8px 0;
-}
-
-/* RDKit 구조 박스(그림 영역) 크게 */
-.rdkit-figure{
-  height: 215px;
-  margin: 14px 0 10px;
-}
-
-.rdkit-figure img{
-  max-height: 195px;
-}
-
-
-    /* ✅ 인쇄 시 숨김 */
-    @media print{
-      .no-print{ display: none !important; }
-    }
-  </style>
 </head>
 
 <body>
@@ -355,7 +273,7 @@
         <h3>단일 조건 예측</h3>
 
         {% if not is_pdf %}
-        <form method="post" class="big-grid no-print">
+        <form method="post" class="topbox no-print">
           {% csrf_token %}
           <input type="hidden" name="smiles_hidden" value="{{ smiles_value }}">
           <input type="hidden" name="fixed_var_hidden" value="{{ fixed_var }}">

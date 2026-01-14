@@ -537,3 +537,80 @@ def smiles_to_mol_png_b64(smiles: str, size=(520, 260)) -> str:
         return base64.b64encode(png_bytes).decode("utf-8")
     except Exception:
         return ""
+
+def _make_static_3d_png(smiles, fixed_var, lec_value, ph_value, dmso_value, single_pred, num_points=9):
+    """
+    ✅ Matplotlib로 3D surface PNG(bytes) 생성 (Render에서도 동작)
+    - fixed_var를 단일조건 값으로 고정
+    - 나머지 2개 변수 평면에서 z=logPe surface 생성
+    - 단일조건 점(마커) 표시
+    - num_points는 8~12 권장 (무료 Render 안정화: 9 추천)
+    """
+    import numpy as np
+    import matplotlib
+    matplotlib.use("Agg")  # 서버에서 GUI 없이 렌더링
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+
+    # grid 범위
+    if fixed_var == "dmso":
+        fixed_value = dmso_value
+        xs = np.linspace(LEC_MIN, LEC_MAX, num_points)
+        ys = np.linspace(PH_MIN, PH_MAX, num_points)
+        X, Y = np.meshgrid(xs, ys)
+
+        Z = np.zeros_like(X, dtype=float)
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                Z[i, j] = predict_single(smiles, float(X[i, j]), float(Y[i, j]), float(fixed_value))
+
+        point_x, point_y = lec_value, ph_value
+        xlab, ylab = "Lec", "pH"
+        title = f"3D Surface (DMSO fixed={fixed_value:.2f})"
+
+    elif fixed_var == "lec":
+        fixed_value = lec_value
+        xs = np.linspace(PH_MIN, PH_MAX, num_points)
+        ys = np.linspace(DMSO_MIN, DMSO_MAX, num_points)
+        X, Y = np.meshgrid(xs, ys)
+
+        Z = np.zeros_like(X, dtype=float)
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                Z[i, j] = predict_single(smiles, float(fixed_value), float(X[i, j]), float(Y[i, j]))
+
+        point_x, point_y = ph_value, dmso_value
+        xlab, ylab = "pH", "DMSO"
+        title = f"3D Surface (Lec fixed={fixed_value:.2f})"
+
+    else:  # fixed_var == "ph"
+        fixed_value = ph_value
+        xs = np.linspace(LEC_MIN, LEC_MAX, num_points)
+        ys = np.linspace(DMSO_MIN, DMSO_MAX, num_points)
+        X, Y = np.meshgrid(xs, ys)
+
+        Z = np.zeros_like(X, dtype=float)
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                Z[i, j] = predict_single(smiles, float(X[i, j]), float(fixed_value), float(Y[i, j]))
+
+        point_x, point_y = lec_value, dmso_value
+        xlab, ylab = "Lec", "DMSO"
+        title = f"3D Surface (pH fixed={fixed_value:.2f})"
+
+    fig = plt.figure(figsize=(7.2, 4.6), dpi=150)
+    ax = fig.add_subplot(111, projection="3d")
+
+    ax.plot_surface(X, Y, Z, linewidth=0, antialiased=True, alpha=0.85)
+    ax.scatter([point_x], [point_y], [single_pred], s=35)
+
+    ax.set_title(title, fontsize=10)
+    ax.set_xlabel(xlab, fontsize=9)
+    ax.set_ylabel(ylab, fontsize=9)
+    ax.set_zlabel("logPe", fontsize=9)
+
+    buf = BytesIO()
+    plt.tight_layout()
+    fig.savefig(buf, format="png")
+    plt.close(fig)  # ✅ 메모리 회수
+    return buf.getvalue()

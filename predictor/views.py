@@ -507,3 +507,33 @@ def permeability_pdf(request):
     resp = HttpResponse(pdf_bytes, content_type="application/pdf")
     resp["Content-Disposition"] = 'attachment; filename="permeability_report.pdf"'
     return resp
+
+def smiles_to_mol_png_b64(smiles: str, size=(520, 260)) -> str:
+    """
+    SMILES -> RDKit 2D 구조 PNG를 base64 문자열로 반환 (웹페이지 표시용)
+    실패 시 "" 반환
+    """
+    try:
+        import base64
+        from rdkit import Chem
+        from rdkit.Chem.Draw import rdMolDraw2D
+
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            return ""
+
+        w, h = size
+        drawer = rdMolDraw2D.MolDraw2DCairo(int(w), int(h))
+        opts = drawer.drawOptions()
+        opts.centerMolecules = True
+        opts.padding = 0.04  # 여백
+
+        drawer.ClearDrawing()
+        rdMolDraw2D.PrepareMolForDrawing(mol)
+        drawer.DrawMolecule(mol)
+        drawer.FinishDrawing()
+
+        png_bytes = drawer.GetDrawingText()
+        return base64.b64encode(png_bytes).decode("utf-8")
+    except Exception:
+        return ""

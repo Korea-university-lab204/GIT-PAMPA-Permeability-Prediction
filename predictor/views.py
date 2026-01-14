@@ -325,19 +325,22 @@ def permeability_pdf(request):
     rd = context["rdkit_desc"]          # dict or obj
 
     # 안전 getter (dict/obj 겸용)
-    def _get(o, k, default=""):
+    def _get(o, k, default=None):
         if o is None:
             return default
-        return getattr(o, k, o.get(k, default))
+        # dict면 get, obj면 getattr
+        if hasattr(o, "get"):
+            return o.get(k, default)
+        return getattr(o, k, default)
 
-    def _fmt4(x, default=""):
+    def _fmt4(x, default="-"):
         try:
             return f"{float(x):.4f}"
         except Exception:
             return default
 
+    # ✅ PDF에서 plotly 생성은 안 쓰므로(무거움) _build_context_for_pdf도 추후 제거 권장
     # ===== 3D 그래프 PNG 생성 (저메모리) =====
-    # num_points=12 권장 (무료 Render 512MB 보호)
     graph_png = _make_static_3d_png(
         smiles=smiles_value,
         fixed_var=fixed_var,
@@ -345,166 +348,162 @@ def permeability_pdf(request):
         ph_value=ph_value,
         dmso_value=dmso_value,
         single_pred=single_pred,
-        num_points=12,
+        num_points=9,   # ✅ 12 → 9로 낮춰서 안정화 추천
     )
 
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+    # ===== PDF 생성 =====
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+    from reportlab.lib.units import mm
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
 
-buf = BytesIO()
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=14*mm, rightMargin=14*mm,
+        topMargin=26*mm, bottomMargin=18*mm
+    )
 
-doc = SimpleDocTemplate(
-    buf,
-    pagesize=A4,
-    leftMargin=14*mm, rightMargin=14*mm,
-    topMargin=26*mm, bottomMargin=18*mm
-)
+    base_styles = getSampleStyleSheet()
+    styles = {}
+    styles["P"] = ParagraphStyle("P", parent=base_styles["Normal"], fontName="Helvetica", fontSize=10, leading=14, textColor=INK)
+    styles["MUTED"] = ParagraphStyle("MUTED", parent=base_styles["Normal"], fontName="Helvetica", fontSize=9, leading=13, textColor=MUTED)
+    styles["CARD_H"] = ParagraphStyle("CARD_H", parent=base_styles["Heading3"], fontName="Helvetica-Bold", fontSize=11, textColor=KU_CRIMSON, spaceAfter=0)
 
-base_styles = getSampleStyleSheet()
-styles = {}
+    story = []
+    story.append(Spacer(1, 6))
 
-# 본문 스타일(웹톤)
-styles["P"] = ParagraphStyle("P", parent=base_styles["Normal"], fontName="Helvetica", fontSize=10, leading=14, textColor=INK)
-styles["MUTED"] = ParagraphStyle("MUTED", parent=base_styles["Normal"], fontName="Helvetica", fontSize=9, leading=13, textColor=MUTED)
-styles["CARD_H"] = ParagraphStyle("CARD_H", parent=base_styles["Heading3"], fontName="Helvetica-Bold", fontSize=11, textColor=KU_CRIMSON, spaceAfter=0)
+    # -----------------------------
+    # (A) Summary 카드
+    # -----------------------------
+    t1_data = [
+        ["Item", "Value"],
+        ["SMILES", smiles_value],
+        ["Fixed variable", fixed_var],
+        ["Lec", f"{lec_value:.2f}"],
+        ["pH", f"{ph_value:.2f}"],
+        ["DMSO", f"{dmso_value:.2f}"],
+        ["Pred logPe (single)", f"{single_pred:.3f}"],
+    ]
+    t1 = Table(t1_data, colWidths=[45*mm, 120*mm])
+    t1.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), INK),
+        ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
+        ("LEFTPADDING", (0,0), (-1,-1), 6),
+        ("RIGHTPADDING", (0,0), (-1,-1), 6),
+        ("TOPPADDING", (0,0), (-1,-1), 4),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+    ]))
+    story.append(_make_card("Summary", [t1], styles))
 
-story = []
-story.append(Spacer(1, 6))
+    # -----------------------------
+    # (B) Molecule 2D 카드
+    # -----------------------------
+    mol_png = smiles_to_mol_png_bytes(smiles_value, size=(520, 220))
+    mol_flows = []
+    if mol_png:
+        mol_flows.append(Image(BytesIO(mol_png), width=150*mm, height=55*mm))
+        mol_flows.append(Spacer(1, 6))
+        mol_flows.append(Paragraph("2D molecular structure (RDKit)", styles["MUTED"]))
+    else:
+        mol_flows.append(Paragraph("Molecule Structure (2D): invalid SMILES", styles["MUTED"]))
+    story.append(_make_card("Molecule Structure (2D)", mol_flows, styles))
 
-# -----------------------------
-# (A) Summary 카드 (입력/단일예측)
-# -----------------------------
-t1_data = [
-    ["Item", "Value"],
-    ["SMILES", smiles_value],
-    ["Fixed variable", fixed_var],
-    ["Lec", f"{lec_value:.2f}"],
-    ["pH", f"{ph_value:.2f}"],
-    ["DMSO", f"{dmso_value:.2f}"],
-    ["Pred logPe (single)", f"{single_pred:.3f}"],
-]
-t1 = Table(t1_data, colWidths=[45*mm, 120*mm])
-t1.setStyle(TableStyle([
-    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
-    ("TEXTCOLOR", (0, 0), (-1, 0), INK),
-    ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
-    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ("FONTSIZE", (0, 0), (-1, -1), 9.5),
-    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
-    ("LEFTPADDING", (0,0), (-1,-1), 6),
-    ("RIGHTPADDING", (0,0), (-1,-1), 6),
-    ("TOPPADDING", (0,0), (-1,-1), 4),
-    ("BOTTOMPADDING", (0,0), (-1,-1), 4),
-]))
-story.append(_make_card("Summary", [t1], styles))
+    # -----------------------------
+    # (C) 3D Surface 카드
+    # -----------------------------
+    story.append(_make_card(
+        "3D Surface (static, fixed at current condition)",
+        [Image(BytesIO(graph_png), width=170*mm, height=108*mm)],
+        styles
+    ))
 
-# -----------------------------
-# (B) Molecule 2D 카드
-# -----------------------------
-mol_png = smiles_to_mol_png_bytes(smiles_value, size=(520, 220))
-mol_flows = []
-if mol_png:
-    # ✅ 분자 그림 크기: 여기서 조절
-    mol_flows.append(Image(BytesIO(mol_png), width=150*mm, height=55*mm))
-    mol_flows.append(Spacer(1, 6))
-    mol_flows.append(Paragraph("2D molecular structure (RDKit)", styles["MUTED"]))
-else:
-    mol_flows.append(Paragraph("Molecule Structure (2D): invalid SMILES", styles["MUTED"]))
+    story.append(PageBreak())
 
-story.append(_make_card("Molecule Structure (2D)", mol_flows, styles))
+    # -----------------------------
+    # (D) Model Performance 카드
+    # -----------------------------
+    t2_data = [
+        ["Metric", "Value"],
+        ["R²", _fmt4(_get(meta, "r2"))],
+        ["RMSE", _fmt4(_get(meta, "rmse"))],
+        ["MAE", _fmt4(_get(meta, "mae"))],
+        ["MAPE (%)", _fmt4(_get(meta, "mape"))],
+    ]
+    t2 = Table(t2_data, colWidths=[55*mm, 55*mm])
+    t2.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
+        ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
+    ]))
+    story.append(_make_card("Model Performance", [t2], styles))
 
-# -----------------------------
-# (C) 3D Surface 카드 (이미지)
-# -----------------------------
-story.append(_make_card(
-    "3D Surface (static, fixed at current condition)",
-    [Image(BytesIO(graph_png), width=170*mm, height=108*mm)],
-    styles
-))
+    # -----------------------------
+    # (E) Local Sensitivity 카드
+    # -----------------------------
+    lec_s = _get(sens, "lec")
+    ph_s = _get(sens, "ph")
+    dmso_s = _get(sens, "dmso")
 
-story.append(PageBreak())
+    t3_data = [
+        ["Variable", "Delta rule", "ΔlogPe"],
+        ["Lec", "+1", f"{float(lec_s):.3f}" if lec_s is not None else "-"],
+        ["pH", "+0.1", f"{float(ph_s):.3f}" if ph_s is not None else "-"],
+        ["DMSO", "+1", f"{float(dmso_s):.3f}" if dmso_s is not None else "-"],
+    ]
+    t3 = Table(t3_data, colWidths=[55*mm, 55*mm, 55*mm])
+    t3.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
+        ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
+    ]))
+    story.append(_make_card("Local Sensitivity (Around this condition)", [t3], styles))
 
-# -----------------------------
-# (D) Model Performance 카드
-# -----------------------------
-t2_data = [
-    ["Metric", "Value"],
-    ["R²", _fmt4(meta.get("r2"))],
-    ["RMSE", _fmt4(meta.get("rmse"))],
-    ["MAE", _fmt4(meta.get("mae"))],
-    ["MAPE (%)", _fmt4(meta.get("mape"))],
-]
-t2 = Table(t2_data, colWidths=[55*mm, 55*mm])
-t2.setStyle(TableStyle([
-    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
-    ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
-    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ("FONTSIZE", (0, 0), (-1, -1), 9.5),
-    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
-]))
-story.append(_make_card("Model Performance", [t2], styles))
+    # -----------------------------
+    # (F) RDKit Descriptors 카드
+    # -----------------------------
+    t4_data = [
+        ["Descriptor", "Value"],
+        ["MolWt", f"{float(_get(rd,'MolWt',0)):.2f}" if _get(rd,'MolWt') is not None else "-"],
+        ["LogP", f"{float(_get(rd,'LogP',0)):.2f}" if _get(rd,'LogP') is not None else "-"],
+        ["TPSA", f"{float(_get(rd,'TPSA',0)):.2f}" if _get(rd,'TPSA') is not None else "-"],
+        ["HBD", str(_get(rd, "HBD", "-"))],
+        ["HBA", str(_get(rd, "HBA", "-"))],
+        ["RotatableBonds", str(_get(rd, "RotatableBonds", "-"))],
+        ["RingCount", str(_get(rd, "RingCount", "-"))],
+        ["HeavyAtomCount", str(_get(rd, "HeavyAtomCount", "-"))],
+    ]
+    t4 = Table(t4_data, colWidths=[70*mm, 95*mm])
+    t4.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
+        ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
+    ]))
+    story.append(_make_card("RDKit Descriptors", [t4], styles))
 
-# -----------------------------
-# (E) Local Sensitivity 카드
-# -----------------------------
-lec_s = _get(sens, "lec", None)
-ph_s = _get(sens, "ph", None)
-dmso_s = _get(sens, "dmso", None)
+    # ✅ 헤더/푸터 적용해서 빌드
+    doc.build(
+        story,
+        onFirstPage=lambda c, d: _draw_header_footer(c, d),
+        onLaterPages=lambda c, d: _draw_header_footer(c, d),
+    )
 
-t3_data = [
-    ["Variable", "Delta rule", "ΔlogPe"],
-    ["Lec", "+1", f"{float(lec_s):.3f}" if lec_s is not None else "-"],
-    ["pH", "+0.1", f"{float(ph_s):.3f}" if ph_s is not None else "-"],
-    ["DMSO", "+1", f"{float(dmso_s):.3f}" if dmso_s is not None else "-"],
-]
-t3 = Table(t3_data, colWidths=[55*mm, 55*mm, 55*mm])
-t3.setStyle(TableStyle([
-    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
-    ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
-    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ("FONTSIZE", (0, 0), (-1, -1), 9.5),
-    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
-]))
-story.append(_make_card("Local Sensitivity (Around this condition)", [t3], styles))
+    pdf_bytes = buf.getvalue()
+    buf.close()
 
-# -----------------------------
-# (F) RDKit Descriptors 카드
-# -----------------------------
-t4_data = [
-    ["Descriptor", "Value"],
-    ["MolWt", f"{float(_get(rd,'MolWt',0)):.2f}" if _get(rd,'MolWt',None) is not None else "-"],
-    ["LogP", f"{float(_get(rd,'LogP',0)):.2f}" if _get(rd,'LogP',None) is not None else "-"],
-    ["TPSA", f"{float(_get(rd,'TPSA',0)):.2f}" if _get(rd,'TPSA',None) is not None else "-"],
-    ["HBD", str(_get(rd, "HBD", "-"))],
-    ["HBA", str(_get(rd, "HBA", "-"))],
-    ["RotatableBonds", str(_get(rd, "RotatableBonds", "-"))],
-    ["RingCount", str(_get(rd, "RingCount", "-"))],
-    ["HeavyAtomCount", str(_get(rd, "HeavyAtomCount", "-"))],
-]
-t4 = Table(t4_data, colWidths=[70*mm, 95*mm])
-t4.setStyle(TableStyle([
-    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f5f6f8")),
-    ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
-    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ("FONTSIZE", (0, 0), (-1, -1), 9.5),
-    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
-]))
-story.append(_make_card("RDKit Descriptors", [t4], styles))
-
-# ✅ 헤더/푸터 적용해서 빌드
-doc.build(
-    story,
-    onFirstPage=lambda c, d: _draw_header_footer(c, d),
-    onLaterPages=lambda c, d: _draw_header_footer(c, d),
-)
-
-pdf_bytes = buf.getvalue()
-buf.close()
-
-resp = HttpResponse(pdf_bytes, content_type="application/pdf")
-resp["Content-Disposition"] = 'attachment; filename="permeability_report.pdf"'
-return resp
+    resp = HttpResponse(pdf_bytes, content_type="application/pdf")
+    resp["Content-Disposition"] = 'attachment; filename="permeability_report.pdf"'
+    return resp

@@ -614,3 +614,31 @@ def _make_static_3d_png(smiles, fixed_var, lec_value, ph_value, dmso_value, sing
     fig.savefig(buf, format="png")
     plt.close(fig)  # ✅ 메모리 회수
     return buf.getvalue()
+
+def smiles_to_mol_png_bytes(smiles: str, size=(260, 110)) -> bytes:
+    """
+    SMILES → RDKit 2D 구조 PNG (bytes)
+    PDF 삽입용
+    실패 시 b"" 반환
+    """
+    try:
+        from rdkit import Chem
+        from rdkit.Chem.Draw import rdMolDraw2D
+
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            return b""
+
+        w, h = size
+        drawer = rdMolDraw2D.MolDraw2DCairo(int(w), int(h))
+        opts = drawer.drawOptions()
+        opts.centerMolecules = True
+        opts.padding = 0.04
+
+        rdMolDraw2D.PrepareAndDrawMolecule(drawer, mol)
+        drawer.FinishDrawing()
+
+        return drawer.GetDrawingText()
+
+    except Exception:
+        return b""

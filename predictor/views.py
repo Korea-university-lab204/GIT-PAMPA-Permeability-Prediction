@@ -9,6 +9,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
 import base64
 from io import BytesIO
+from django.utils import timezone
 
 
 from .surface_utils import (
@@ -51,6 +52,12 @@ def _draw_header_footer(canvas, doc):
     canvas.setLineWidth(0.7)
     canvas.line(14*mm, page_h - header_h, page_w - 14*mm, page_h - header_h)
 
+    now = timezone.localtime(timezone.now()).strftime("%Y-%m-%d %H:%M")
+    canvas.setFillColor(MUTED)
+    canvas.setFont("Helvetica", 8.5)
+    canvas.drawRightString(page_w - 14*mm, page_h - 16.8*mm, f"Printed: {now}")
+
+
     # 로고 2개 (좌측)
     x = 14 * mm
     y = page_h - header_h + 3.2*mm
@@ -60,12 +67,12 @@ def _draw_header_footer(canvas, doc):
 
     # ✅ 로고 크기: 여기서 조절
     ku_h = 12 * mm
-    pharm_h = 12 * mm
+    pharm_h = 13.5 * mm
 
     try:
         canvas.drawImage(ku_logo, x, y, height=ku_h, width=ku_h*2.2, preserveAspectRatio=True, mask="auto")
-        x += 28*mm
-        canvas.drawImage(pharm_logo, x, y, height=pharm_h, width=pharm_h*2.0, preserveAspectRatio=True, mask="auto")
+        x += 10*mm
+        canvas.drawImage(pharm_logo, x, y, height=pharm_h, width=pharm_h*2.2, preserveAspectRatio=True, mask="auto")
     except Exception:
         # 로고 로딩 실패해도 PDF 생성은 계속
         pass
@@ -404,31 +411,18 @@ def permeability_pdf(request):
     story.append(_make_card("Summary", [t1], styles))
 
     # -----------------------------
-    # (B) Molecule 2D 카드
-    # -----------------------------
-    mol_png = smiles_to_mol_png_bytes(smiles_value, size=(520, 220))
-    mol_flows = []
-    if mol_png:
-        mol_flows.append(Image(BytesIO(mol_png), width=150*mm, height=55*mm))
-        mol_flows.append(Spacer(1, 6))
-        mol_flows.append(Paragraph("2D molecular structure (RDKit)", styles["MUTED"]))
-    else:
-        mol_flows.append(Paragraph("Molecule Structure (2D): invalid SMILES", styles["MUTED"]))
-    story.append(_make_card("Molecule Structure (2D)", mol_flows, styles))
-
-    # -----------------------------
-    # (C) 3D Surface 카드
+    # (B) 3D Surface 카드
     # -----------------------------
     story.append(_make_card(
         "3D Surface (static, fixed at current condition)",
         [Image(BytesIO(graph_png), width=170*mm, height=108*mm)],
         styles
     ))
-
+    
     story.append(PageBreak())
 
     # -----------------------------
-    # (D) Model Performance 카드
+    # (C) Model Performance 카드
     # -----------------------------
     t2_data = [
         ["Metric", "Value"],
@@ -448,7 +442,7 @@ def permeability_pdf(request):
     story.append(_make_card("Model Performance", [t2], styles))
 
     # -----------------------------
-    # (E) Local Sensitivity 카드
+    # (D) Local Sensitivity 카드
     # -----------------------------
     lec_s = _get(sens, "lec")
     ph_s = _get(sens, "ph")
@@ -471,7 +465,7 @@ def permeability_pdf(request):
     story.append(_make_card("Local Sensitivity (Around this condition)", [t3], styles))
 
     # -----------------------------
-    # (F) RDKit Descriptors 카드
+    # (E) RDKit Descriptors 카드
     # -----------------------------
     t4_data = [
         ["Descriptor", "Value"],
@@ -493,6 +487,20 @@ def permeability_pdf(request):
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
     ]))
     story.append(_make_card("RDKit Descriptors", [t4], styles))
+
+
+    # -----------------------------
+    # (F) Molecule 2D 카드
+    # -----------------------------
+    mol_png = smiles_to_mol_png_bytes(smiles_value, size=(520, 220))
+    mol_flows = []
+    if mol_png:
+        mol_flows.append(Image(BytesIO(mol_png), width=150*mm, height=55*mm))
+        mol_flows.append(Spacer(1, 6))
+        mol_flows.append(Paragraph("2D molecular structure (RDKit)", styles["MUTED"]))
+    else:
+        mol_flows.append(Paragraph("Molecule Structure (2D): invalid SMILES", styles["MUTED"]))
+    story.append(_make_card("Molecule Structure (2D)", mol_flows, styles))
 
     # ✅ 헤더/푸터 적용해서 빌드
     doc.build(

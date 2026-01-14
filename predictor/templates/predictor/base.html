@@ -1,0 +1,383 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Git-PAMPA{% endblock %}</title>
+
+  <style>
+    :root{
+      --primary:#8b0000;
+      --ink:#111827;
+      --muted:#6b7280;
+      --bg:#f5f6f8;
+      --card:#ffffff;
+      --border:#e5e7eb;
+      --shadow: 0 8px 24px rgba(17,24,39,0.08);
+      --radius:14px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans KR", sans-serif;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 18px 18px 40px;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    /* ---------- Top Header ---------- */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      margin: -18px -18px 18px;
+      padding: 14px 18px;
+      background: rgba(245,246,248,0.86);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 280px;
+    }
+
+    .brand .titles{ line-height: 1.15; }
+    .brand .titles .title{
+      font-weight: 900;
+      letter-spacing: -0.2px;
+      font-size: 18px;
+    }
+    .brand .titles .subtitle{
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .topnav{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .chip{
+      font-size: 13px;
+      color: var(--ink);
+      background: rgba(255,255,255,0.75);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 999px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+    }
+    .chip strong{ font-weight: 800; }
+
+    /* ---------- KU Logo ---------- */
+    .ku-logo-wrap{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ku-logo{
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+      display:block;
+    }
+    .ku-logo.pharm{ height: 48px; }
+
+    /* ---------- Inputs / Buttons ---------- */
+    input[type="text"], input[type="number"]{
+      padding: 9px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      outline: none;
+      font-size: 14px;
+    }
+    input[type="text"]{ width: 360px; }
+
+    input:focus{
+      border-color: rgba(139,0,0,0.35);
+      box-shadow: 0 0 0 4px rgba(139,0,0,0.10);
+    }
+
+    button{
+      padding: 10px 14px;
+      cursor: pointer;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-weight: 800;
+    }
+    button:hover{ box-shadow: 0 6px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    button:active{ transform: translateY(0px); }
+
+    /* ---------- Layout ---------- */
+    .layout{
+      display: flex;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: flex-start;
+    }
+
+    .left-panel{
+      flex: 2;
+      min-width: 520px;
+    }
+
+    .right-panel{
+      flex: 1;
+      min-width: 460px;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    /* ---------- Cards ---------- */
+    .box{
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 16px 18px;
+      overflow: hidden;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .box h3{
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: -0.1px;
+      color: var(--ink);
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+
+    .box h3::before{
+      content:"";
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: rgba(139,0,0,0.22);
+      border: 1px solid rgba(139,0,0,0.25);
+      display:inline-block;
+    }
+
+    .box p{
+      margin: 8px 0;
+      font-size: 14px;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .error{ color: #b91c1c; margin-top: 10px; font-weight: 700; }
+
+    /* ---------- Top big box ---------- */
+    .big-box{
+      min-height: 220px;
+      padding: 16px 18px;
+      overflow: visible;
+    }
+
+    .topbox{
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .topbox .big-left{ flex: 0 0 230px; }
+
+    .topbox .big-left label{
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+      margin: 10px 0 6px;
+      color: var(--ink);
+    }
+
+    .topbox .big-left input{
+      width: 210px;
+      height: 38px;
+      border-radius: 12px;
+    }
+
+    .topbox .big-mid{
+      flex: 0 0 170px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 24px;
+    }
+
+    .topbox .big-mid button{
+      width: 170px;
+      height: 52px;
+      border-radius: 999px;
+      border: 1px solid rgba(139,0,0,0.28);
+      background: rgba(139,0,0,0.06);
+      color: var(--primary);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .topbox .big-right{
+      flex: 1 1 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      margin-top: 0;
+      padding-top: 24px;
+    }
+
+    .topbox .pred-row{
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .topbox .pred-label{
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .topbox .readonly-box{
+      width: 170px;
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 14px;
+      padding: 9px 10px;
+    }
+
+    .topbox .pdf-btn{
+      width: 170px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(139,0,0,0.28);
+      background: rgba(139,0,0,0.08);
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    /* ---------- Bottom grid ---------- */
+    .bottom-grid{
+      display: grid;
+      grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .stack{
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stack .box{ min-height: 160px; }
+
+    /* ---------- RDKit figure ---------- */
+    .rdkit-figure{
+      border: 1px solid var(--border);
+      background: #fbfbfc;
+      height: 180px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0 8px;
+    }
+
+    .rdkit-figure img{
+      max-width: 100%;
+      max-height: 165px;
+      height: auto;
+    }
+
+    .small-caption{
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin: 0 0 12px 0;
+    }
+
+    /* ---------- Graph form area ---------- */
+    form.big-flex{
+      background: rgba(255,255,255,0.75);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ✅ 인쇄 시 숨김 */
+    @media print{
+      .no-print{ display: none !important; }
+      body{ background:#fff; padding: 0; }
+      .box{ box-shadow:none; }
+    }
+
+    /* ✅ 작은 화면 대응 */
+    @media (max-width: 1100px){
+      .layout{ flex-direction: column; }
+      .left-panel{ min-width: 0; }
+      .right-panel{ max-width: 100%; min-width: 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="ku-logo-wrap">
+          <img src="{% static 'img/ku_logo.png' %}" alt="Korea University" class="ku-logo">
+          <img src="{% static 'img/ku_pharm_logo.png' %}" alt="College of Pharmacy" class="ku-logo pharm">
+        </div>
+        <div class="titles">
+          <div class="title">Git-PAMPA</div>
+          <div class="subtitle">Korea University · College of Pharmacy · Permeability Prediction</div>
+        </div>
+      </div>
+
+      <div class="topnav">
+        <a class="chip" href="#single"><strong>Single</strong> Prediction</a>
+        <a class="chip" href="#model"><strong>Model</strong> Performance</a>
+        <a class="chip" href="#rdkit"><strong>RDKit</strong> Descriptors</a>
+      </div>
+    </div>
+  </div>
+
+  {% block content %}{% endblock %}
+
+</body>
+</html>

@@ -40,5 +40,14 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
+# ✅ collectstatic이 production에서 DEBUG=False일 때도 실패하지 않도록
+ENV DJANGO_SETTINGS_MODULE=mysite.settings
+ENV DEBUG=False
+ENV SECRET_KEY=dummy
+
+# ✅ 정적 파일 수집
+RUN python manage.py collectstatic --noinput
+
+
 EXPOSE 8000
 CMD ["sh", "-c", "gunicorn mysite.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 180"]

@@ -9,3 +9,4 @@ rdkit-pypi
 playwright
 reportlab
 matplotlib
+whitenoise

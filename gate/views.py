@@ -13,4 +13,4 @@ def gate_view(request):
         else:
             error = "접근 코드가 올바르지 않습니다."
 
-    return render(request, "gate.html", {"error": error})
+    return render(request, "gate/gate.html", {"error": error})

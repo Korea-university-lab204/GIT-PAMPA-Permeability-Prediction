@@ -1,20 +1,174 @@
 <!-- templates/gate.html -->
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ko">
 <head>
-    <title>Access Gate</title>
-</head>
-<body>
-    <h2>접근 코드 입력</h2>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Access Gate</title>
+  <style>
+    :root{
+      --bg1:#f6f7fb;
+      --bg2:#eef2ff;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --primary:#4f46e5;
+      --primaryHover:#4338ca;
+      --dangerBg:#fef2f2;
+      --dangerText:#991b1b;
+      --shadow: 0 18px 50px rgba(17,24,39,.12);
+      --radius: 18px;
+    }
 
-    <form method="post">
-        {% csrf_token %}
-        <input type="password" name="code" placeholder="Access Code" required>
-        <button type="submit">입장</button>
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(900px 500px at 20% 10%, var(--bg2), transparent),
+                  radial-gradient(900px 500px at 80% 0%, #e0f2fe, transparent),
+                  linear-gradient(180deg, var(--bg1), #fff);
+      padding: 24px;
+    }
+
+    .card{
+      width: min(520px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .header{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom: 18px;
+    }
+
+    .badge{
+      width:44px;
+      height:44px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      background: rgba(79,70,229,.12);
+      color: var(--primary);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+
+    h1{
+      font-size: 22px;
+      margin:0;
+      letter-spacing: -0.2px;
+    }
+
+    p{
+      margin: 6px 0 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    form{
+      margin-top: 18px;
+      display:flex;
+      gap:10px;
+    }
+
+    .input{
+      flex:1;
+      height: 48px;
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 15px;
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .input:focus{
+      border-color: rgba(79,70,229,.55);
+      box-shadow: 0 0 0 4px rgba(79,70,229,.12);
+    }
+
+    .btn{
+      height: 48px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 14px;
+      background: var(--primary);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .06s, background .15s;
+      white-space: nowrap;
+    }
+    .btn:hover{ background: var(--primaryHover); }
+    .btn:active{ transform: translateY(1px); }
+
+    .hint{
+      margin-top: 14px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .error{
+      margin-top: 14px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      background: var(--dangerBg);
+      border: 1px solid rgba(220,38,38,.18);
+      color: var(--dangerText);
+      font-size: 13.5px;
+    }
+
+    @media (max-width: 420px){
+      .card{ padding: 20px; }
+      form{ flex-direction: column; }
+      .btn{ width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <div class="header">
+      <div class="badge" aria-hidden="true">
+        <!-- 간단한 자물쇠 아이콘 (SVG) -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M7 11V8.5C7 5.46 9.46 3 12.5 3C15.54 3 18 5.46 18 8.5V11"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6.5 11H18.5C19.33 11 20 11.67 20 12.5V19.5C20 20.33 19.33 21 18.5 21H6.5C5.67 21 5 20.33 5 19.5V12.5C5 11.67 5.67 11 6.5 11Z"
+                stroke="currentColor" stroke-width="2" />
+          <path d="M12.5 15V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1>접근 코드 입력</h1>
+        <p>승인된 사용자만 이용할 수 있어요. 접근 코드를 입력해 주세요.</p>
+      </div>
+    </div>
+
+    <form method="post" autocomplete="off">
+      {% csrf_token %}
+      <input class="input" type="password" name="code" placeholder="Access Code" required autofocus />
+      <button class="btn" type="submit">입장</button>
     </form>
 
     {% if error %}
-        <p style="color:red;">{{ error }}</p>
+      <div class="error">{{ error }}</div>
     {% endif %}
+
+    <div class="hint">
+      접근 코드가 없으면 관리자에게 문의해 주세요.
+    </div>
+  </main>
 </body>
 </html>

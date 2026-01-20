@@ -1,0 +1,20 @@
+<!-- templates/gate.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Access Gate</title>
+</head>
+<body>
+    <h2>접근 코드 입력</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="password" name="code" placeholder="Access Code" required>
+        <button type="submit">입장</button>
+    </form>
+
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+</body>
+</html>

@@ -143,4 +143,4 @@ STORAGES = {
 
 
 # 접근 코드 (나중에 여기만 바꾸면 됨)
-GATE_ACCESS_CODE = "YOUR_SECRET_CODE_2026"
+GATE_ACCESS_CODE = "1234"

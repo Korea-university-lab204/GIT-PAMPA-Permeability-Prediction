@@ -53,16 +53,20 @@
       display:block;
     }
 
-    /* 고려대 로고 */
-    .logo-main{
-      height: 82px;
-      max-width: 260px;
+    .logos{
+      display:flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      gap: 24px;
+      justify-content:center;
+      align-items:center;
     }
 
-    /* 약대 로고 */
-    .logo-pharm{
-      height: 68px;
-      max-width: 220px;
+    .logos img{
+      display:block;
+      object-fit: contain;
+      height: 78px;
+      max-width: 45vw;   /* ✅ 화면이 좁아지면 줄어들게 */
     }
 
     /* ✅ 3) 사이트 목적(프레딕션) 타이틀 */

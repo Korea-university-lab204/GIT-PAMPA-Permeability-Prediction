@@ -9,7 +9,7 @@ def gate_view(request):
 
         if code == settings.GATE_ACCESS_CODE:
             request.session["gate_ok"] = True
-            return redirect("/")
+            return redirect("/predictor/")
         else:
             error = "접근 코드가 올바르지 않습니다."
 

@@ -1,11 +1,11 @@
 Django==5.2.9
 gunicorn
-numpy
+numpy==1.26.4
 pandas
-scikit-learn
+scikit-learn==1.7.1
 joblib
 plotly
-rdkit-pypi
+rdkit-pypi==2022.9.5
 playwright
 reportlab
 matplotlib
